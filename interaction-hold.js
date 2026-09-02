@@ -12,21 +12,20 @@
   if (!ui) return;
 
   const oldPrompt = () => document.querySelector('.treePrompt');
-  const prompt = document.createElement('div');
+  const prompt = document.getElementById('holdTreePrompt') || document.createElement('div');
   prompt.id = 'holdTreePrompt';
   prompt.hidden = true;
-  prompt.innerHTML = '<span class="holdTreeName">???</span><small>E &nbsp; กดค้างเพื่อค้นหา</small>';
-  ui.appendChild(prompt);
+  if (!prompt.parentNode) ui.appendChild(prompt);
 
-  const progressBox = document.createElement('div');
+  const progressBox = document.getElementById('treeSearchProgress') || document.createElement('div');
   progressBox.id = 'treeSearchProgress';
   progressBox.hidden = true;
   progressBox.innerHTML = '<div class="searchLabel"><span>กำลังค้นหาต้นไม้</span><b>0%</b></div><div class="searchTrack"><i></i></div>';
-  ui.appendChild(progressBox);
+  if (!progressBox.parentNode) ui.appendChild(progressBox);
 
   function hideOldPrompt() {
     const el = oldPrompt();
-    if (el) el.hidden = true;
+    if (el) { el.hidden = true; el.style.display = 'none'; }
   }
 
   function treeFromGame() {
@@ -39,9 +38,7 @@
     return Math.hypot(mirror.x - t.x, mirror.y - (t.y + 42 * s));
   }
 
-  function isClose(t) {
-    return !!t && distanceToTree(t) <= CLOSE_DIST;
-  }
+  function isClose(t) { return !!t && distanceToTree(t) <= CLOSE_DIST; }
 
   function updatePrompt() {
     hideOldPrompt();
@@ -81,32 +78,29 @@
 
   function finishSearch() {
     const t = treeFromGame();
-    if (!isClose(t)) {
-      cancelSearch();
-      return;
-    }
+    if (!isClose(t)) { cancelSearch(); return; }
     holding = false;
     progressBox.hidden = true;
     open = true;
     prompt.hidden = true;
-    if (typeof window.showTreeDetails === 'function') window.showTreeDetails(t);
-    else if (typeof window.treeInfo === 'function') window.treeInfo(t);
+    const box = document.getElementById('treeInfo');
+    if (box && t.info) {
+      box.innerHTML = `<h3>${t.info[0]}</h3><p class="latin">${t.info[1]} · <i>${t.info[2]}</i></p><p><b>ประเภท:</b> ${t.info[3]}</p><p class="fact">${t.info[4]}</p><div class="close">E &nbsp; ปิดข้อมูล</div>`;
+      box.hidden = false;
+    }
   }
 
   function tick(now) {
     hideOldPrompt();
     const t = treeFromGame();
     if (holding) {
-      if (!isClose(t)) {
-        cancelSearch();
-      } else {
+      if (!isClose(t)) cancelSearch();
+      else {
         const pct = ((now - started) / HOLD_MS) * 100;
         setProgress(pct);
         if (pct >= 100) finishSearch();
       }
-    } else {
-      updatePrompt();
-    }
+    } else updatePrompt();
     requestAnimationFrame(tick);
   }
 
@@ -115,12 +109,10 @@
     ev.preventDefault();
     ev.stopImmediatePropagation();
     if (ev.repeat) return;
-
     if (open) {
       open = false;
       const box = document.getElementById('treeInfo');
       if (box) box.hidden = true;
-      if (typeof window.closeTreeDetails === 'function') window.closeTreeDetails();
       updatePrompt();
       return;
     }
@@ -134,26 +126,22 @@
     if (holding) cancelSearch();
   }, true);
 
-  addEventListener('blur', () => {
-    if (holding) cancelSearch();
-  });
+  addEventListener('blur', () => { if (holding) cancelSearch(); });
 
   const waitForGame = setInterval(() => {
     if (typeof window.move === 'function' && !initializedMove) {
       originalMove = window.move;
       window.move = function(dx, dy) {
+        const beforeX = mirror.x, beforeY = mirror.y;
         originalMove(dx, dy);
-        // The game spawns at this coordinate. Keep the interaction mirror in
-        // sync with every accepted movement. Collision is handled by the game.
-        mirror.x += dx;
-        mirror.y += dy;
+        mirror.x = beforeX + dx;
+        mirror.y = beforeY + dy;
       };
       initializedMove = true;
       clearInterval(waitForGame);
     }
   }, 20);
 
-  // Keep the legacy prompt permanently hidden even though game.js redraws it.
   setInterval(hideOldPrompt, 50);
   requestAnimationFrame(tick);
 })();
