@@ -71,15 +71,7 @@ function world(){
  [[740,700],[950,700],[1280,700],[1450,700],[1380,980]].forEach(([x,y])=>{R(x,y,4,18,'#4a3326');R(x-4,y-3,12,7,'#7c5934');R(x-2,y-1,8,4,'#ffd66a')});
  particles();hero();
 }
-function text(str,x,y,size,font='Prompt'){g.fillStyle='#f6f0dc';g.font=`${size}px ${font}, sans-serif`;g.fillText(str,x,y)}
-function ui(){
- R(8,8,142,40,'#0b111bd9');R(12,13,56,7,'#39212a');R(12,13,47,7,'#d55d70');R(12,26,56,5,'#19354a');R(12,26,39,5,'#55a8d1');
- text('100 / 100',15,20,6);text('20 / 20',15,36,6);text('MOONWOOD',76,20,7,'Cinzel');text('HUMAN ADVENTURER',76,33,5);
- text('CHAPTER '+(chapter+1),382,16,6,'Cinzel');R(360,25,110,34,'#0b111bd9');text('CURRENT QUEST',367,35,5,'Cinzel');text(chapter===0?'Find the ancient shrine':'Cross the river',367,46,5);text(chapter===0?'Follow the old road':'Seek the lost kingdom',367,54,4);
- R(8,244,188,18,'#0b111bd9');text('WASD / ARROWS',15,256,6);text('MOVE',82,256,5,'Cinzel');
- if(msgTimer>0){R(74,218,332,30,'#0b111be8');text(chapter===0?'An ancient power sleeps beneath the shrine...':'The road beyond the river leads to the unknown...',84,236,6)}
- if(dialogue){R(48,188,384,66,'#0b1019f2');R(55,194,370,2,'#a98b4d');text(dialogue,64,215,7);text('SPACE  continue',64,239,5,'Cinzel')}
-}
-function draw(){g.clearRect(0,0,c.width,c.height);const sx=Math.max(0,Math.min(W-c.width,p.x-c.width/2)),sy=Math.max(0,Math.min(H-c.height,p.y-c.height/2));g.save();g.translate(-sx,-sy);world();g.restore();ui()}
+function updateUI(){chapterEl.innerHTML='CHAPTER '+(chapter+1)+' <div class="type">HUMAN ADVENTURER</div>';if(msgTimer>0){noticeEl.textContent=chapter===0?'An ancient power sleeps beneath the shrine...':'The road beyond the river leads to the unknown...';noticeEl.style.display='block'}else noticeEl.style.display='none';if(dialogue){dialogueEl.innerHTML=dialogue+'<span class="continue">SPACE &nbsp; CONTINUE</span>';dialogueEl.hidden=false}else dialogueEl.hidden=true}
+function draw(){g.clearRect(0,0,c.width,c.height);const sx=Math.max(0,Math.min(W-c.width,p.x-c.width/2)),sy=Math.max(0,Math.min(H-c.height,p.y-c.height/2));g.save();g.translate(-sx,-sy);world();g.restore();updateUI()}
 function update(dt){time+=dt;msgTimer=Math.max(0,msgTimer-dt);if(dialogue){if(keys[' ']){keys[' ']=false;if(chapter===0){chapter=1;dialogue='A voice whispers: “The Moon King has awakened.”'}else if(chapter===1){chapter=2;dialogue='Beyond the river lies a kingdom erased from every map.'}else dialogue=null;}}else{let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){const n=Math.hypot(dx,dy);p.x+=dx/n*p.s*dt;p.y+=dy/n*p.s*dt;p.dir=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';p.frame=(p.frame+dt*8)%2|0}p.x=Math.max(30,Math.min(W-30,p.x));p.y=Math.max(40,Math.min(H-40,p.y));if(Math.hypot(p.x-405,p.y-320)<105&&chapter===0){dialogue='A mysterious light shines from the ancient shrine.';msgTimer=0}}}
 let last=performance.now();function loop(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
