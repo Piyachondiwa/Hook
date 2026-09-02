@@ -5,7 +5,7 @@ const keys={};
 addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault()});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 const W=2400,H=1500;
-const p={x:1190,y:760,s:150,dir:'down',frame:0};
+const p={x:1190,y:760,s:150,dir:'down',frame:0,walk:0};
 let chapter=0,msgTimer=5,dialogue=null,time=0;
 const seed=7319;
 const trees=[],flowers=[],rocks=[],fireflies=[];
@@ -17,61 +17,35 @@ for(let i=0;i<70;i++)fireflies.push({x:rnd(i,31)*W,y:rnd(i,47)*H,p:rnd(i,53)*6.2
 function R(x,y,w,h,col){g.fillStyle=col;g.fillRect(Math.floor(x),Math.floor(y),Math.ceil(w),Math.ceil(h))}
 function tile(x,y,col){R(x*12,y*12,12,12,col)}
 function pathRect(x,y,w,h){R(x,y,w,h,'#8c714d');R(x,y,w,3,'#a8895d');for(let i=0;i<Math.floor(w/30);i++)R(x+12+i*31,y+12+(i%3)*8,4,2,'#6f583e')}
-function drawGrass(){
- R(0,0,W,H,'#244d35');
- for(let y=0;y<H;y+=12)for(let x=0;x<W;x+=12){let n=rnd(x,y);tile(x/12,y/12,n>.76?'#315f3b':n>.34?'#2b5737':'#285238');if(n>.91)R(x+2,y+8,2,3,'#427347');}
- R(0,1000,W,175,'#4b7590');R(0,1000,W,5,'#83b9c2');R(0,1007,W,3,'#315a70');
- for(let x=0;x<W;x+=48){R(x,1022+(x%4)*9,18,2,'#6f9cad');R(x+24,1090+(x%3)*8,11,2,'#3e6579')}
- R(0,988,W,12,'#3d7043');R(0,1175,W,12,'#396b40');
- pathRect(0,720,1030,58);pathRect(1280,720,1120,58);pathRect(1140,0,58,650);pathRect(1140,820,58,680);
- R(360,430,760,34,'#70685a');for(let x=370;x<1120;x+=34){R(x,436,25,21,'#8a8170');R(x+5,439,17,3,'#aaa08b')}
-}
-function cliff(x,y,w,h){
- R(x,y,w,h,'#3a2e2b');R(x+5,y+5,w-10,h-5,'#514039');R(x+10,y+10,w-20,8,'#806047');
- for(let yy=y+25;yy<y+h;yy+=18)for(let xx=x+12;xx<x+w-8;xx+=24){let n=rnd(xx,yy);R(xx,yy,12+(n*7),4,n>.5?'#624b3e':'#2e2829');}
- R(x,y,w,5,'#5b7842');R(x+4,y-3,w-8,4,'#6f914a');
-}
-function tree(q){
- const s=1+(q.v-.64)*1.8;
- R(q.x-5*s,q.y+12*s,10*s,24*s,'#3b2924');R(q.x-2*s,q.y+16*s,5*s,19*s,'#63402b');
- R(q.x-25*s,q.y-14*s,50*s,35*s,'#173b2a');R(q.x-19*s,q.y-28*s,38*s,29*s,'#1d4b31');R(q.x-8*s,q.y-39*s,20*s,20*s,'#2b643b');
- R(q.x-18*s,q.y-13*s,13*s,8*s,'#367445');R(q.x+7*s,q.y-21*s,12*s,9*s,'#39794a');R(q.x-8*s,q.y-32*s,8*s,6*s,'#4d8a50');
- R(q.x-27*s,q.y+2*s,7*s,4*s,'#102f23');R(q.x+15*s,q.y-2*s,7*s,4*s,'#112f23');
-}
-function flower(q){const cols=['#f0c85a','#e98aa4','#bda1ed','#9bd6d1','#f5e6c1'];const col=cols[q.t];R(q.x,q.y,2,5,'#4d8a48');R(q.x-3,q.y-2,3,3,col);R(q.x+2,q.y-2,3,3,col);R(q.x-1,q.y-5,3,3,col);R(q.x-1,q.y,3,3,'#e6c66b')}
+function drawGrass(){R(0,0,W,H,'#244d35');for(let y=0;y<H;y+=12)for(let x=0;x<W;x+=12){let n=rnd(x,y);tile(x/12,y/12,n>.76?'#315f3b':n>.34?'#2b5737':'#285238');if(n>.91)R(x+2,y+8,2,3,'#427347')}R(0,1000,W,175,'#4b7590');R(0,1000,W,5,'#83b9c2');R(0,1007,W,3,'#315a70');for(let x=0;x<W;x+=48){R(x,1022+(x%4)*9,18,2,'#6f9cad');R(x+24,1090+(x%3)*8,11,2,'#3e6579')}R(0,988,W,12,'#3d7043');R(0,1175,W,12,'#396b40');pathRect(0,720,1030,58);pathRect(1280,720,1120,58);pathRect(1140,0,58,650);pathRect(1140,820,58,680);R(360,430,760,34,'#70685a');for(let x=370;x<1120;x+=34){R(x,436,25,21,'#8a8170');R(x+5,439,17,3,'#aaa08b')}}
+function cliff(x,y,w,h){R(x,y,w,h,'#3a2e2b');R(x+5,y+5,w-10,h-5,'#514039');R(x+10,y+10,w-20,8,'#806047');for(let yy=y+25;yy<y+h;yy+=18)for(let xx=x+12;xx<x+w-8;xx+=24){let n=rnd(xx,yy);R(xx,yy,12+n*7,4,n>.5?'#624b3e':'#2e2829')}R(x,y,w,5,'#5b7842');R(x+4,y-3,w-8,4,'#6f914a')}
+function tree(q){const s=1+(q.v-.64)*1.8;R(q.x-5*s,q.y+12*s,10*s,24*s,'#3b2924');R(q.x-2*s,q.y+16*s,5*s,19*s,'#63402b');R(q.x-25*s,q.y-14*s,50*s,35*s,'#173b2a');R(q.x-19*s,q.y-28*s,38*s,29*s,'#1d4b31');R(q.x-8*s,q.y-39*s,20*s,20*s,'#2b643b');R(q.x-18*s,q.y-13*s,13*s,8*s,'#367445');R(q.x+7*s,q.y-21*s,12*s,9*s,'#39794a');R(q.x-8*s,q.y-32*s,8*s,6*s,'#4d8a50');R(q.x-27*s,q.y+2*s,7*s,4*s,'#102f23');R(q.x+15*s,q.y-2*s,7*s,4*s,'#112f23')}
+function flower(q){const cols=['#f0c85a','#e98aa4','#bda1ed','#9bd6d1','#f5e6c1'],col=cols[q.t];R(q.x,q.y,2,5,'#4d8a48');R(q.x-3,q.y-2,3,3,col);R(q.x+2,q.y-2,3,3,col);R(q.x-1,q.y-5,3,3,col);R(q.x-1,q.y,3,3,'#e6c66b')}
 function rock(q){R(q.x-8,q.y-4,16,9,'#48505a');R(q.x-5,q.y-8,11,5,'#707984');R(q.x-7,q.y+5,14,3,'#303840');R(q.x-3,q.y-6,4,2,'#9098a0')}
-function house(x,y){
- R(x,y+25,190,105,'#604333');R(x+8,y+35,174,95,'#79513a');
- for(let i=0;i<9;i++){R(x-7+i*22,y+5-i%2*2,30,25,'#392b31');R(x+i*22,y+4-i%2*2,24,5,'#71444a')}
- R(x+72,y+70,46,60,'#30262a');R(x+83,y+82,24,48,'#44313a');R(x+20,y+58,36,28,'#91c5c6');R(x+132,y+58,36,28,'#91c5c6');
- R(x+27,y+64,20,5,'#d7eeee');R(x+139,y+64,20,5,'#d7eeee');R(x+63,y+20,64,8,'#8d6445');
-}
-function shrine(){
- const x=330,y=330;R(x-20,y+100,190,18,'#504944');R(x,y+80,150,20,'#6f675d');R(x+16,y+20,118,70,'#777064');
- R(x+36,y+8,78,25,'#8b8374');R(x+51,y-10,48,18,'#6e685d');R(x+57,y+22,36,46,'#71bfd0');R(x+63,y+28,24,28,'#b3f0ed');R(x+46,y-3,58,5,'#c9a85a');
- R(x+70,y-30,12,20,'#8d7148');R(x+64,y-38,24,9,'#c7a75a');
- const pulse=2+Math.sin(time*3)*2;R(x+55-pulse,y+18-pulse,2+pulse,2,'#8ff5e9');R(x+108,y+48,2,2+pulse,'#8ff5e9');
-}
-function bridge(){R(1010,1005,390,62,'#493326');for(let i=0;i<13;i++){R(1018+i*30,1007,22,58,'#9a6840');R(1021+i*30,1015,16,4,'#c08b55');}R(1008,1000,394,7,'#5f4935')}
+function house(x,y){R(x,y+25,190,105,'#604333');R(x+8,y+35,174,95,'#79513a');for(let i=0;i<9;i++){R(x-7+i*22,y+5-i%2*2,30,25,'#392b31');R(x+i*22,y+4-i%2*2,24,5,'#71444a')}R(x+72,y+70,46,60,'#30262a');R(x+83,y+82,24,48,'#44313a');R(x+20,y+58,36,28,'#91c5c6');R(x+132,y+58,36,28,'#91c5c6');R(x+27,y+64,20,5,'#d7eeee');R(x+139,y+64,20,5,'#d7eeee');R(x+63,y+20,64,8,'#8d6445')}
+function shrine(){const x=330,y=330;R(x-20,y+100,190,18,'#504944');R(x,y+80,150,20,'#6f675d');R(x+16,y+20,118,70,'#777064');R(x+36,y+8,78,25,'#8b8374');R(x+51,y-10,48,18,'#6e685d');R(x+57,y+22,36,46,'#71bfd0');R(x+63,y+28,24,28,'#b3f0ed');R(x+46,y-3,58,5,'#c9a85a');R(x+70,y-30,12,20,'#8d7148');R(x+64,y-38,24,9,'#c7a75a');const pulse=2+Math.sin(time*3)*2;R(x+55-pulse,y+18-pulse,2+pulse,2,'#8ff5e9');R(x+108,y+48,2,2+pulse,'#8ff5e9')}
+function bridge(){R(1010,1005,390,62,'#493326');for(let i=0;i<13;i++){R(1018+i*30,1007,22,58,'#9a6840');R(1021+i*30,1015,16,4,'#c08b55')}R(1008,1000,394,7,'#5f4935')}
 function hero(){
- const b=p.frame?1:0,x=p.x,y=p.y+b;R(x-10,y+22,20,5,'#172b20');
- R(x-12,y+14,9,13,'#292c3b');R(x+3,y+14,9,13,'#292c3b');R(x-14,y+25,12,4,'#171a25');R(x+3,y+25,12,4,'#171a25');
- R(x-11,y-3,22,21,'#315e9a');R(x-7,y-8,14,8,'#5e83b9');R(x-9,y+8,18,9,'#243f70');
- R(x-9,y-20,18,17,'#e6b98e');R(x-10,y-23,20,7,'#3a2929');R(x-7,y-27,15,7,'#51332b');R(x-5,y-25,4,3,'#694333');
- R(x-6,y-14,3,3,'#1b2230');R(x+3,y-14,3,3,'#1b2230');R(x-15,y-2,4,17,'#e6b98e');R(x+11,y-2,4,17,'#e6b98e');
- R(x-17,y+13,7,5,'#315e9a');R(x+10,y+13,7,5,'#315e9a');
- if(p.dir==='right'){R(x+15,y+1,6,4,'#d7b45e');R(x+20,y,3,17,'#a87c40')}
- if(p.dir==='left'){R(x-21,y+1,6,4,'#d7b45e');R(x-23,y,3,17,'#a87c40')}
+ const x=p.x,y=p.y;
+ const f=p.walking?Math.floor(p.walk)%4:0;
+ const bob=p.walking?[0,-1,0,1][f]:0;
+ const legL=[0,3,0,-3][f],legR=[0,-3,0,3][f];
+ const armL=[0,2,0,-2][f],armR=[0,-2,0,2][f];
+ R(x-11,y+28,22,4,'#172b20');
+ R(x-12+legL,y+14+bob,9,14,'#292c3b');R(x+3+legR,y+14+bob,9,14,'#292c3b');
+ R(x-14+legL,y+26+bob,12,4,'#171a25');R(x+3+legR,y+26+bob,12,4,'#171a25');
+ R(x-11,y-3+bob,22,21,'#315e9a');R(x-7,y-8+bob,14,8,'#5e83b9');R(x-9,y+8+bob,18,9,'#243f70');
+ R(x-9,y-20+bob,18,17,'#e6b98e');R(x-10,y-23+bob,20,7,'#3a2929');R(x-7,y-27+bob,15,7,'#51332b');R(x-5,y-25+bob,4,3,'#694333');
+ R(x-6,y-14+bob,3,3,'#1b2230');R(x+3,y-14+bob,3,3,'#1b2230');
+ R(x-15,y-2+armL+bob,4,17,'#e6b98e');R(x+11,y-2+armR+bob,4,17,'#e6b98e');
+ R(x-17,y+13+armL+bob,7,5,'#315e9a');R(x+10,y+13+armR+bob,7,5,'#315e9a');
+ if(p.dir==='right'){R(x+15,y+1+bob,6,4,'#d7b45e');R(x+20,y+bob,3,17,'#a87c40')}
+ if(p.dir==='left'){R(x-21,y+1+bob,6,4,'#d7b45e');R(x-23,y+bob,3,17,'#a87c40')}
+ if(p.dir==='up'){R(x-5,y-25+bob,4,3,'#694333');R(x+2,y-25+bob,4,3,'#694333')}
 }
 function particles(){for(const f of fireflies){const yy=f.y+Math.sin(time*1.4+f.p)*8;if(Math.sin(time*2+f.p)>.35)R(f.x,yy,2,2,'#d8dc87')}}
-function world(){
- drawGrass();cliff(1540,180,510,250);cliff(1670,1230,440,180);R(720,1210,300,140,'#30282a');R(760,1235,220,115,'#181c20');R(835,1260,70,90,'#392b24');
- flowers.forEach(f=>{if(f.y<1000||f.y>1180)flower(f)});rocks.forEach(rock);trees.sort((a,b)=>a.y-b.y).forEach(tree);
- house(760,545);house(1460,470);shrine();bridge();
- [[740,700],[950,700],[1280,700],[1450,700],[1380,980]].forEach(([x,y])=>{R(x,y,4,18,'#4a3326');R(x-4,y-3,12,7,'#7c5934');R(x-2,y-1,8,4,'#ffd66a')});
- particles();hero();
-}
+function world(){drawGrass();cliff(1540,180,510,250);cliff(1670,1230,440,180);R(720,1210,300,140,'#30282a');R(760,1235,220,115,'#181c20');R(835,1260,70,90,'#392b24');flowers.forEach(f=>{if(f.y<1000||f.y>1180)flower(f)});rocks.forEach(rock);trees.sort((a,b)=>a.y-b.y).forEach(tree);house(760,545);house(1460,470);shrine();bridge();[[740,700],[950,700],[1280,700],[1450,700],[1380,980]].forEach(([x,y])=>{R(x,y,4,18,'#4a3326');R(x-4,y-3,12,7,'#7c5934');R(x-2,y-1,8,4,'#ffd66a')});particles();hero()}
 function updateUI(){chapterEl.innerHTML='CHAPTER '+(chapter+1)+' <div class="type">HUMAN ADVENTURER</div>';if(msgTimer>0){noticeEl.textContent=chapter===0?'An ancient power sleeps beneath the shrine...':'The road beyond the river leads to the unknown...';noticeEl.style.display='block'}else noticeEl.style.display='none';if(dialogue){dialogueEl.innerHTML=dialogue+'<span class="continue">SPACE &nbsp; CONTINUE</span>';dialogueEl.hidden=false}else dialogueEl.hidden=true}
 function draw(){g.clearRect(0,0,c.width,c.height);const sx=Math.max(0,Math.min(W-c.width,p.x-c.width/2)),sy=Math.max(0,Math.min(H-c.height,p.y-c.height/2));g.save();g.translate(-sx,-sy);world();g.restore();updateUI()}
-function update(dt){time+=dt;msgTimer=Math.max(0,msgTimer-dt);if(dialogue){if(keys[' ']){keys[' ']=false;if(chapter===0){chapter=1;dialogue='A voice whispers: “The Moon King has awakened.”'}else if(chapter===1){chapter=2;dialogue='Beyond the river lies a kingdom erased from every map.'}else dialogue=null;}}else{let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){const n=Math.hypot(dx,dy);p.x+=dx/n*p.s*dt;p.y+=dy/n*p.s*dt;p.dir=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';p.frame=(p.frame+dt*8)%2|0}p.x=Math.max(30,Math.min(W-30,p.x));p.y=Math.max(40,Math.min(H-40,p.y));if(Math.hypot(p.x-405,p.y-320)<105&&chapter===0){dialogue='A mysterious light shines from the ancient shrine.';msgTimer=0}}}
+function update(dt){time+=dt;msgTimer=Math.max(0,msgTimer-dt);if(dialogue){p.walking=false;if(keys[' ']){keys[' ']=false;if(chapter===0){chapter=1;dialogue='A voice whispers: “The Moon King has awakened.”'}else if(chapter===1){chapter=2;dialogue='Beyond the river lies a kingdom erased from every map.'}else dialogue=null}}else{let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){const n=Math.hypot(dx,dy);p.x+=dx/n*p.s*dt;p.y+=dy/n*p.s*dt;p.dir=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';p.walking=true;p.walk=(p.walk+dt*10)%4}else{p.walking=false;p.walk=0}p.x=Math.max(30,Math.min(W-30,p.x));p.y=Math.max(40,Math.min(H-40,p.y));if(Math.hypot(p.x-405,p.y-320)<105&&chapter===0){dialogue='A mysterious light shines from the ancient shrine.';msgTimer=0}}}
 let last=performance.now();function loop(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
