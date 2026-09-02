@@ -1,18 +1,85 @@
-const c=document.getElementById('game'),g=c.getContext('2d');g.imageSmoothingEnabled=false;
+const c=document.getElementById('game'),g=c.getContext('2d');
+g.imageSmoothingEnabled=false;
 const chapterEl=document.getElementById('chapter'),noticeEl=document.getElementById('notice'),dialogueEl=document.getElementById('dialogue');
-const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
-const MW=2200,MH=1400,p={x:1100,y:700,s:165,dir:'down',frame:0};let time=0,chapter=0,msgTimer=4,dialogue=null;
-const trees=[],flowers=[],rocks=[];for(let i=0;i<190;i++){let a=Math.random()*MW,b=Math.random()*MH;if(Math.hypot(a-1100,b-700)>260)trees.push({x:a,y:b,r:18+Math.random()*16});}for(let i=0;i<260;i++)flowers.push({x:Math.random()*MW,y:Math.random()*MH,c:['#f1c75b','#e9829a','#9fc9e8','#d9a7f0'][i%4]});for(let i=0;i<55;i++)rocks.push({x:Math.random()*MW,y:Math.random()*MH});
-function R(a,b,w,h,col){g.fillStyle=col;g.fillRect(Math.floor(a),Math.floor(b),w,h)}
-function tree(q){R(q.x-6,q.y+13,12,28,'#422a24');R(q.x-10,q.y+4,20,20,'#58372a');R(q.x-27,q.y-7,54,25,'#163728');R(q.x-20,q.y-23,40,25,'#1d4b32');R(q.x-10,q.y-34,20,18,'#28643f');R(q.x-4,q.y-42,8,11,'#3f8550');R(q.x-25,q.y-3,8,5,'#397b49');}
-function flower(q){R(q.x,q.y,2,2,q.c);R(q.x+2,q.y-2,2,2,q.c);R(q.x-2,q.y-2,2,2,q.c);R(q.x,q.y+2,2,2,'#6f9850')}
-function rock(q){R(q.x-7,q.y-4,14,8,'#59606a');R(q.x-4,q.y-8,9,4,'#707781');R(q.x-5,q.y+4,11,3,'#3e454e')}
-function hero(){const b=p.frame?1:0;R(p.x-7,p.y+13+b,14,13,'#25243a');R(p.x-10,p.y-5+b,20,20,'#365f9c');R(p.x-7,p.y-17+b,14,13,'#e8bd95');R(p.x-10,p.y-20+b,20,6,'#4a3028');R(p.x-7,p.y-24+b,14,6,'#5b392c');R(p.x-4,p.y-12+b,2,2,'#1d2230');R(p.x+2,p.y-12+b,2,2,'#1d2230');R(p.x-12,p.y-2+b,4,13,'#e8bd95');R(p.x+8,p.y-2+b,4,13,'#e8bd95');R(p.x-13,p.y+7+b,6,13,'#292b42');R(p.x+7,p.y+7+b,6,13,'#292b42');if(p.dir==='right'){R(p.x+12,p.y-2+b,4,4,'#d7b56b');R(p.x+16,p.y-1+b,2,13,'#a87c40')}if(p.dir==='left'){R(p.x-16,p.y-2+b,4,4,'#d7b56b');R(p.x-18,p.y-1+b,2,13,'#a87c40')}}
-function house(){R(820,510,260,170,'#684734');R(800,500,300,24,'#342532');for(let i=0;i<10;i++)R(808+i*29,474,22,25,'#51313d');R(915,590,55,90,'#30242b');R(840,540,38,35,'#a8d7d5');R(1020,540,38,35,'#a8d7d5');R(853,548,12,6,'#d9eef0');R(1033,548,12,6,'#d9eef0');}
-function shrine(){R(250,300,150,20,'#61564d');R(270,320,110,90,'#7c7061');R(290,275,70,45,'#8c806e');R(304,288,42,27,'#8ed1dc');R(295,270,60,7,'#d9b85f');R(315,250,20,20,'#a78955');}
-function bridge(){R(1430,610,310,72,'#5b3b29');for(let i=0;i<10;i++){R(1438+i*30,612,22,68,'#9a6b40');R(1440+i*30,618,18,3,'#bd8b54')}}
-function drawWorld(){R(0,0,MW,MH,'#2b583c');for(let i=0;i<1300;i++){let xx=(i*97)%MW,yy=(i*53)%MH;R(xx,yy,1,1,i%5?'#386c46':'#528456')}R(0,970,MW,150,'#527f99');R(0,970,MW,4,'#91c3d0');R(0,975,MW,3,'#3e657b');R(100,665,720,48,'#866e50');R(1080,665,820,48,'#866e50');R(1600,160,48,520,'#866e50');flowers.forEach(f=>flower(f));rocks.forEach(rock);trees.sort((a,b)=>a.y-b.y).forEach(tree);shrine();house();bridge();hero();}
-function ui(){chapterEl.textContent='CHAPTER '+(chapter+1);chapterEl.innerHTML+=' <div class="type">HUMAN ADVENTURER</div>';if(msgTimer>0){noticeEl.textContent=chapter===0?'An ancient power sleeps beneath the shrine...':'The road beyond the river leads to the unknown...';noticeEl.style.display='block'}else noticeEl.style.display='none';if(dialogue){dialogueEl.innerHTML=dialogue+'<span class="continue">SPACE &nbsp; CONTINUE</span>';dialogueEl.hidden=false}else dialogueEl.hidden=true}
-function draw(){g.clearRect(0,0,c.width,c.height);const sx=Math.max(0,Math.min(MW-320,p.x-160)),sy=Math.max(0,Math.min(MH-180,p.y-90));g.save();g.translate(-sx,-sy);drawWorld();g.restore();ui()}
-function update(dt){time+=dt;msgTimer=Math.max(0,msgTimer-dt);if(dialogue){if(keys[' ']){keys[' ']=false;if(chapter===0){chapter=1;dialogue='A voice whispers: “The Moon King has awakened.”'}else if(chapter===1){chapter=2;dialogue='Beyond the river lies a kingdom erased from every map.'}else dialogue=null;}}else{let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){let n=Math.hypot(dx,dy);p.x+=dx/n*p.s*dt;p.y+=dy/n*p.s*dt;p.dir=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';p.frame=(p.frame+dt*8)%2|0}p.x=Math.max(35,Math.min(MW-35,p.x));p.y=Math.max(45,Math.min(MH-45,p.y));if(Math.hypot(p.x-325,p.y-305)<90&&chapter===0){dialogue='A mysterious light shines from the ancient shrine.';msgTimer=0}}}
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+const W=2400,H=1500;
+const p={x:1190,y:760,s:150,dir:'down',frame:0};
+let chapter=0,msgTimer=5,dialogue=null,time=0;
+const seed=7319;
+const trees=[],flowers=[],rocks=[],fireflies=[];
+function rnd(x,y){const n=Math.sin(x*12.9898+y*78.233+seed)*43758.5453;return n-Math.floor(n)}
+for(let y=50;y<H-50;y+=42)for(let x=50;x<W-50;x+=42){const r=rnd(x,y);if(r>.64&&Math.hypot(x-1190,y-760)>210)trees.push({x:x+(rnd(x+2,y)*18-9),y:y+(rnd(x+5,y)*18-9),v:r});}
+for(let i=0;i<620;i++)flowers.push({x:30+rnd(i,3)*2340,y:30+rnd(i,9)*1440,t:i%5});
+for(let i=0;i<95;i++)rocks.push({x:20+rnd(i,15)*2360,y:20+rnd(i,22)*1460,s:5+rnd(i,28)*6});
+for(let i=0;i<70;i++)fireflies.push({x:rnd(i,31)*W,y:rnd(i,47)*H,p:rnd(i,53)*6.28});
+function R(x,y,w,h,col){g.fillStyle=col;g.fillRect(Math.floor(x),Math.floor(y),Math.ceil(w),Math.ceil(h))}
+function tile(x,y,col){R(x*12,y*12,12,12,col)}
+function pathRect(x,y,w,h){R(x,y,w,h,'#8c714d');R(x,y,w,3,'#a8895d');for(let i=0;i<Math.floor(w/30);i++)R(x+12+i*31,y+12+(i%3)*8,4,2,'#6f583e')}
+function drawGrass(){
+ R(0,0,W,H,'#244d35');
+ for(let y=0;y<H;y+=12)for(let x=0;x<W;x+=12){let n=rnd(x,y);tile(x/12,y/12,n>.76?'#315f3b':n>.34?'#2b5737':'#285238');if(n>.91)R(x+2,y+8,2,3,'#427347');}
+ R(0,1000,W,175,'#4b7590');R(0,1000,W,5,'#83b9c2');R(0,1007,W,3,'#315a70');
+ for(let x=0;x<W;x+=48){R(x,1022+(x%4)*9,18,2,'#6f9cad');R(x+24,1090+(x%3)*8,11,2,'#3e6579')}
+ R(0,988,W,12,'#3d7043');R(0,1175,W,12,'#396b40');
+ pathRect(0,720,1030,58);pathRect(1280,720,1120,58);pathRect(1140,0,58,650);pathRect(1140,820,58,680);
+ R(360,430,760,34,'#70685a');for(let x=370;x<1120;x+=34){R(x,436,25,21,'#8a8170');R(x+5,439,17,3,'#aaa08b')}
+}
+function cliff(x,y,w,h){
+ R(x,y,w,h,'#3a2e2b');R(x+5,y+5,w-10,h-5,'#514039');R(x+10,y+10,w-20,8,'#806047');
+ for(let yy=y+25;yy<y+h;yy+=18)for(let xx=x+12;xx<x+w-8;xx+=24){let n=rnd(xx,yy);R(xx,yy,12+(n*7),4,n>.5?'#624b3e':'#2e2829');}
+ R(x,y,w,5,'#5b7842');R(x+4,y-3,w-8,4,'#6f914a');
+}
+function tree(q){
+ const s=1+(q.v-.64)*1.8;
+ R(q.x-5*s,q.y+12*s,10*s,24*s,'#3b2924');R(q.x-2*s,q.y+16*s,5*s,19*s,'#63402b');
+ R(q.x-25*s,q.y-14*s,50*s,35*s,'#173b2a');R(q.x-19*s,q.y-28*s,38*s,29*s,'#1d4b31');R(q.x-8*s,q.y-39*s,20*s,20*s,'#2b643b');
+ R(q.x-18*s,q.y-13*s,13*s,8*s,'#367445');R(q.x+7*s,q.y-21*s,12*s,9*s,'#39794a');R(q.x-8*s,q.y-32*s,8*s,6*s,'#4d8a50');
+ R(q.x-27*s,q.y+2*s,7*s,4*s,'#102f23');R(q.x+15*s,q.y-2*s,7*s,4*s,'#112f23');
+}
+function flower(q){const cols=['#f0c85a','#e98aa4','#bda1ed','#9bd6d1','#f5e6c1'];const col=cols[q.t];R(q.x,q.y,2,5,'#4d8a48');R(q.x-3,q.y-2,3,3,col);R(q.x+2,q.y-2,3,3,col);R(q.x-1,q.y-5,3,3,col);R(q.x-1,q.y,3,3,'#e6c66b')}
+function rock(q){R(q.x-8,q.y-4,16,9,'#48505a');R(q.x-5,q.y-8,11,5,'#707984');R(q.x-7,q.y+5,14,3,'#303840');R(q.x-3,q.y-6,4,2,'#9098a0')}
+function house(x,y){
+ R(x,y+25,190,105,'#604333');R(x+8,y+35,174,95,'#79513a');
+ for(let i=0;i<9;i++){R(x-7+i*22,y+5-i%2*2,30,25,'#392b31');R(x+i*22,y+4-i%2*2,24,5,'#71444a')}
+ R(x+72,y+70,46,60,'#30262a');R(x+83,y+82,24,48,'#44313a');R(x+20,y+58,36,28,'#91c5c6');R(x+132,y+58,36,28,'#91c5c6');
+ R(x+27,y+64,20,5,'#d7eeee');R(x+139,y+64,20,5,'#d7eeee');R(x+63,y+20,64,8,'#8d6445');
+}
+function shrine(){
+ const x=330,y=330;R(x-20,y+100,190,18,'#504944');R(x,y+80,150,20,'#6f675d');R(x+16,y+20,118,70,'#777064');
+ R(x+36,y+8,78,25,'#8b8374');R(x+51,y-10,48,18,'#6e685d');R(x+57,y+22,36,46,'#71bfd0');R(x+63,y+28,24,28,'#b3f0ed');R(x+46,y-3,58,5,'#c9a85a');
+ R(x+70,y-30,12,20,'#8d7148');R(x+64,y-38,24,9,'#c7a75a');
+ const pulse=2+Math.sin(time*3)*2;R(x+55-pulse,y+18-pulse,2+pulse,2,'#8ff5e9');R(x+108,y+48,2,2+pulse,'#8ff5e9');
+}
+function bridge(){R(1010,1005,390,62,'#493326');for(let i=0;i<13;i++){R(1018+i*30,1007,22,58,'#9a6840');R(1021+i*30,1015,16,4,'#c08b55');}R(1008,1000,394,7,'#5f4935')}
+function hero(){
+ const b=p.frame?1:0,x=p.x,y=p.y+b;R(x-10,y+22,20,5,'#172b20');
+ R(x-12,y+14,9,13,'#292c3b');R(x+3,y+14,9,13,'#292c3b');R(x-14,y+25,12,4,'#171a25');R(x+3,y+25,12,4,'#171a25');
+ R(x-11,y-3,22,21,'#315e9a');R(x-7,y-8,14,8,'#5e83b9');R(x-9,y+8,18,9,'#243f70');
+ R(x-9,y-20,18,17,'#e6b98e');R(x-10,y-23,20,7,'#3a2929');R(x-7,y-27,15,7,'#51332b');R(x-5,y-25,4,3,'#694333');
+ R(x-6,y-14,3,3,'#1b2230');R(x+3,y-14,3,3,'#1b2230');R(x-15,y-2,4,17,'#e6b98e');R(x+11,y-2,4,17,'#e6b98e');
+ R(x-17,y+13,7,5,'#315e9a');R(x+10,y+13,7,5,'#315e9a');
+ if(p.dir==='right'){R(x+15,y+1,6,4,'#d7b45e');R(x+20,y,3,17,'#a87c40')}
+ if(p.dir==='left'){R(x-21,y+1,6,4,'#d7b45e');R(x-23,y,3,17,'#a87c40')}
+}
+function particles(){for(const f of fireflies){const yy=f.y+Math.sin(time*1.4+f.p)*8;if(Math.sin(time*2+f.p)>.35)R(f.x,yy,2,2,'#d8dc87')}}
+function world(){
+ drawGrass();cliff(1540,180,510,250);cliff(1670,1230,440,180);R(720,1210,300,140,'#30282a');R(760,1235,220,115,'#181c20');R(835,1260,70,90,'#392b24');
+ flowers.forEach(f=>{if(f.y<1000||f.y>1180)flower(f)});rocks.forEach(rock);trees.sort((a,b)=>a.y-b.y).forEach(tree);
+ house(760,545);house(1460,470);shrine();bridge();
+ [[740,700],[950,700],[1280,700],[1450,700],[1380,980]].forEach(([x,y])=>{R(x,y,4,18,'#4a3326');R(x-4,y-3,12,7,'#7c5934');R(x-2,y-1,8,4,'#ffd66a')});
+ particles();hero();
+}
+function text(str,x,y,size,font='Prompt'){g.fillStyle='#f6f0dc';g.font=`${size}px ${font}, sans-serif`;g.fillText(str,x,y)}
+function ui(){
+ R(8,8,142,40,'#0b111bd9');R(12,13,56,7,'#39212a');R(12,13,47,7,'#d55d70');R(12,26,56,5,'#19354a');R(12,26,39,5,'#55a8d1');
+ text('100 / 100',15,20,6);text('20 / 20',15,36,6);text('MOONWOOD',76,20,7,'Cinzel');text('HUMAN ADVENTURER',76,33,5);
+ text('CHAPTER '+(chapter+1),382,16,6,'Cinzel');R(360,25,110,34,'#0b111bd9');text('CURRENT QUEST',367,35,5,'Cinzel');text(chapter===0?'Find the ancient shrine':'Cross the river',367,46,5);text(chapter===0?'Follow the old road':'Seek the lost kingdom',367,54,4);
+ R(8,244,188,18,'#0b111bd9');text('WASD / ARROWS',15,256,6);text('MOVE',82,256,5,'Cinzel');
+ if(msgTimer>0){R(74,218,332,30,'#0b111be8');text(chapter===0?'An ancient power sleeps beneath the shrine...':'The road beyond the river leads to the unknown...',84,236,6)}
+ if(dialogue){R(48,188,384,66,'#0b1019f2');R(55,194,370,2,'#a98b4d');text(dialogue,64,215,7);text('SPACE  continue',64,239,5,'Cinzel')}
+}
+function draw(){g.clearRect(0,0,c.width,c.height);const sx=Math.max(0,Math.min(W-c.width,p.x-c.width/2)),sy=Math.max(0,Math.min(H-c.height,p.y-c.height/2));g.save();g.translate(-sx,-sy);world();g.restore();ui()}
+function update(dt){time+=dt;msgTimer=Math.max(0,msgTimer-dt);if(dialogue){if(keys[' ']){keys[' ']=false;if(chapter===0){chapter=1;dialogue='A voice whispers: “The Moon King has awakened.”'}else if(chapter===1){chapter=2;dialogue='Beyond the river lies a kingdom erased from every map.'}else dialogue=null;}}else{let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx||dy){const n=Math.hypot(dx,dy);p.x+=dx/n*p.s*dt;p.y+=dy/n*p.s*dt;p.dir=Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'down':'up';p.frame=(p.frame+dt*8)%2|0}p.x=Math.max(30,Math.min(W-30,p.x));p.y=Math.max(40,Math.min(H-40,p.y));if(Math.hypot(p.x-405,p.y-320)<105&&chapter===0){dialogue='A mysterious light shines from the ancient shrine.';msgTimer=0}}}
 let last=performance.now();function loop(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
