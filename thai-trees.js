@@ -28,4 +28,3 @@ species.splice(0,species.length,...thaiSpecies);
 trees.forEach(t=>{t.type=Math.floor(rnd(t.x+37,t.y+71)*species.length);t.visualType=t.type%5;t.info=species[t.type]});
 const originalTreeCanopy=treeCanopy;
 treeCanopy=function(t){const old=t.type;t.type=t.visualType??(old%5);originalTreeCanopy(t);t.type=old};
-treeInfo=function(t){if(!t){treeInfoEl.hidden=true;treeDetailsOpen=false;return}const s=t.info;treeDetailsOpen=true;treeInfoEl.innerHTML=`<h3>${s[0]}</h3><p class="latin">${s[1]} · <i>${s[2]}</i></p><p><b>ประเภท:</b> ${s[3]}</p><p class="fact">${s[4]}</p><div class="close">E &nbsp; CLOSE</div>`;treeInfoEl.hidden=false};
