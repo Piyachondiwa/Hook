@@ -13,6 +13,7 @@ function lantern(x,y){B(x-2,y,4,22,C.dark);B(x-8,y-7,16,10,C.stone);B(x-5,y-13,1
 function ricePatch(x,y,w,h){B(x,y,w,h,'#6f633d');B(x+5,y+5,w-10,h-10,'#8d7b42');for(let xx=x+10;xx<x+w-8;xx+=12)for(let yy=y+10;yy<y+h-6;yy+=12){B(xx,yy,2,6,C.rice);B(xx+3,yy-2,2,7,C.rice2);B(xx+6,yy+1,2,5,C.rice)}}
 function fence(x,y,w){for(let xx=x;xx<=x+w;xx+=30){B(xx,y,5,24,C.dark);B(xx-2,y-3,9,4,C.wood2)}B(x,y+5,w,4,C.wood2);B(x,y+17,w,4,C.wood)}
 function island(){
+ B(1320,1420,960,92,'#24566d');
  B(2250,900,1350,520,C.water);for(let i=0;i<90;i++){const xx=2260+(i*83)%1320,yy=930+(i*47)%430;B(xx,yy,7+(i%4)*3,2,i%3===0?C.water3:C.water2)}
  B(2480,955,1020,360,C.bank);B(2510,925,960,25,C.bank2);B(2525,1310,900,25,C.stone);B(2550,1335,850,18,C.dark);
  B(2480,1110,1020,54,C.path);B(2930,950,58,380,C.path2);B(2580,1020,260,48,C.path2);B(3140,1190,270,45,C.path2);
@@ -22,11 +23,11 @@ function island(){
  pixelTree(2700,1035,1.25);pixelTree(3330,1080,1.35);pixelTree(3040,1240,1);
  B(2760,1195,115,72,C.bamboo);B(2770,1205,95,52,C.wall2);B(2810,1190,15,12,C.stone);B(2804,1186,27,7,C.stone2);for(let i=0;i<14;i++)B(2780+(i%7)*13,1235+(i%2)*13,6,6,i%2?C.sakura:C.rice2);
  for(const q of [[2600,1100],[2740,1100],[3150,1130],[3300,1200]])lantern(q[0],q[1]);
- B(1830,1085,700,92,C.dark);B(1840,1090,680,12,C.wood2);B(1840,1160,680,12,C.wood);for(let xx=1850;xx<2520;xx+=28){B(xx,1098,20,58,C.wood2);B(xx+4,1105,12,43,C.wood);B(xx+7,1108,7,4,'#c58b53')}for(const xx of [1860,2020,2180,2340,2490]){B(xx,1065,8,105,C.dark);B(xx-8,1062,24,7,C.wood2)}
- for(const xx of [1950,2150,2350]){lantern(xx,1075);B(xx-1,1072,2,3,C.sakura2)}for(let i=0;i<30;i++){const xx=2260+(i*97)%1100,yy=900+(i*61)%470;B(xx,yy,3+(i%2),3,i%3?C.sakura:C.sakura2)}
+ B(1760,1085,790,92,C.dark);B(1770,1090,770,12,C.wood2);B(1770,1160,770,12,C.wood);for(let xx=1780;xx<2520;xx+=28){B(xx,1098,20,58,C.wood2);B(xx+4,1105,12,43,C.wood);B(xx+7,1108,7,4,'#c58b53')}for(const xx of [1790,1950,2110,2270,2430,2490]){B(xx,1065,8,105,C.dark);B(xx-8,1062,24,7,C.wood2)}
+ for(const xx of [1880,2080,2280]){lantern(xx,1075);B(xx-1,1072,2,3,C.sakura2)}for(let i=0;i<30;i++){const xx=2260+(i*97)%1100,yy=900+(i*61)%470;B(xx,yy,3+(i%2),3,i%3?C.sakura:C.sakura2)}
 }
 function cameraGrade(){g.translate(c.width/2,c.height/2+10);g.scale(1,.86);g.translate(-c.width/2,-c.height/2-10)}
 world=function(){g.save();cameraGrade();oldWorld();island();if(typeof hero==='function')hero();if(typeof arrow==='function')arrow();g.restore()};
-if(oldBlocked){blocked=function(x,y){if(oldBlocked(x,y)){if(x>=1820&&x<=2535&&y>=1070&&y<=1195)return false;return true}return false}}
-window.moonwoodScene={camera:'elevated-3/4',japaneseIsland:true,bridge:true,riceFields:true,torii:true,sakura:true};
+if(oldBlocked){blocked=function(x,y){if(oldBlocked(x,y)){if(x>=1760&&x<=2550&&y>=1070&&y<=1195)return false;return true}return false}}
+window.moonwoodScene={camera:'elevated-3/4',japaneseIsland:true,bridge:true,riceFields:true,torii:true,sakura:true,oldBridgeRemoved:true};
 })();
