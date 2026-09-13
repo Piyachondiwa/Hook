@@ -2,7 +2,8 @@
   const ui = document.getElementById('ui');
   if (!ui) return;
 
-  // Kill every legacy prompt created by game.js.
+  // The old interaction code in game.js still creates a legacy prompt.
+  // Hide it permanently so only interaction-stable.js owns E/tree UI.
   const hideLegacyPrompt = () => {
     document.querySelectorAll('.treePrompt').forEach(el => {
       el.hidden = true;
@@ -10,15 +11,7 @@
     });
   };
 
-  // Disable the old one-tap E path. The hold interaction is the only tree action.
-  const patchLegacyPromptUpdater = () => {
-    if (typeof window.updateTreePrompt === 'function' && !window.__moonwoodPromptPatched) {
-      window.updateTreePrompt = () => hideLegacyPrompt();
-      window.__moonwoodPromptPatched = true;
-    }
-  };
-
-  // Remove stale overlay elements from any previous script version.
+  // Remove duplicate overlays from previous versions.
   const removeDuplicateHoldUI = () => {
     const prompts = [...document.querySelectorAll('#holdTreePrompt')];
     prompts.slice(1).forEach(el => el.remove());
@@ -27,30 +20,27 @@
   };
 
   hideLegacyPrompt();
-  patchLegacyPromptUpdater();
   removeDuplicateHoldUI();
 
-  // Keep the game canvas and UI state sane when scripts initialize in different orders.
-  const safeState = () => {
-    try { return typeof window.moonwoodState === 'function' ? window.moonwoodState() : null; }
-    catch (_) { return null; }
-  };
-
-  // Prevent keyboard scroll/interference for gameplay keys without stealing editable input focus.
+  // Keep gameplay keys from scrolling the page, without touching form fields.
   addEventListener('keydown', ev => {
     const tag = ev.target?.tagName;
     const editable = tag === 'INPUT' || tag === 'TEXTAREA' || ev.target?.isContentEditable;
     if (!editable && ['w','a','s','d','e','arrowup','arrowdown','arrowleft','arrowright',' '].includes(ev.key.toLowerCase())) {
       ev.preventDefault();
     }
-  }, true);
+  }, false);
 
-  // Expose a stable read-only snapshot for future UI layers.
-  window.moonwoodRuntimeState = safeState;
+  window.moonwoodRuntimeState = () => {
+    try {
+      return typeof window.moonwoodState === 'function' ? window.moonwoodState() : null;
+    } catch (_) {
+      return null;
+    }
+  };
 
   requestAnimationFrame(() => {
     hideLegacyPrompt();
-    patchLegacyPromptUpdater();
     removeDuplicateHoldUI();
   });
 })();
