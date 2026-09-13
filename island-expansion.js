@@ -1,5 +1,5 @@
-/* Moonwood: large second island detail layer. Drawn after the original scene so it is a separate destination, not a replacement of the old map. */
-(()=>{'use strict';if(typeof R==='undefined'||typeof c==='undefined')return;const B=(x,y,w,h,col)=>R(x,y,w,h,col);const X=3820,Y=760,W=980,H=750;const C={edge:'#77736b',land:'#8f8251',land2:'#ad9b5d',soil:'#665a39',soil2:'#8b7740',wood:'#69422d',wood2:'#96613d',dark:'#352923',roof:'#343239',roof2:'#554b49',wall:'#9b704b',wall2:'#c99d68',paper:'#eee4c6',red:'#a33e35',red2:'#d15c48',stone:'#8d887c',stone2:'#b1a897',rice:'#b7a34f',rice2:'#d8c76b',rice3:'#8f8c3f',pink:'#e6a5ba',pink2:'#f4cbd5',path:'#9b754d',path2:'#b58b59',bamboo:'#486a43',gold:'#e2aa5c'};
+/* Moonwood: large second island detail layer and camera-safe world extension. */
+(()=>{'use strict';if(typeof R==='undefined'||typeof c==='undefined'||typeof p==='undefined')return;const B=(x,y,w,h,col)=>R(x,y,w,h,col);const X=3820,Y=760,W=980,H=750,SCENE_W=5000,VIEW_Y=.86;const C={edge:'#77736b',land:'#8f8251',land2:'#ad9b5d',soil:'#665a39',soil2:'#8b7740',wood:'#69422d',wood2:'#96613d',dark:'#352923',roof:'#343239',roof2:'#554b49',wall:'#9b704b',wall2:'#c99d68',paper:'#eee4c6',red:'#a33e35',red2:'#d15c48',stone:'#8d887c',stone2:'#b1a897',rice:'#b7a34f',rice2:'#d8c76b',rice3:'#8f8c3f',pink:'#e6a5ba',pink2:'#f4cbd5',path:'#9b754d',path2:'#b58b59',bamboo:'#486a43',gold:'#e2aa5c'};
 function roof(x,y,w,h,col){B(x-8,y,w+16,h,col);B(x+8,y-7,w-16,7,C.roof2);B(x+21,y-13,w-42,6,col);for(let q=x;q<x+w;q+=16)B(q,y+h-2,10,3,'#74666a')}
 function house(x,y,s=1,col=C.roof){const w=132*s,h=78*s;B(x,y,w,h,C.dark);B(x+6*s,y+7*s,w-12*s,h-7*s,C.wall2);roof(x-2*s,y-15*s,w+4*s,18*s,col);for(let i=0;i<7;i++)B(x+(12+i*17)*s,y+9*s,3*s,h-30*s,C.wood);B(x+14*s,y+19*s,40*s,30*s,C.dark);B(x+19*s,y+24*s,30*s,20*s,C.paper);B(x+34*s,y+24*s,3*s,20*s,C.wood);B(x+65*s,y+19*s,45*s,30*s,C.dark);B(x+70*s,y+24*s,35*s,20*s,C.paper);B(x+86*s,y+24*s,3*s,20*s,C.wood);B(x+52*s,y+52*s,28*s,26*s,C.dark);B(x+56*s,y+56*s,20*s,22*s,C.wood2);B(x+58*s,y+59*s,7*s,19*s,C.wall2);B(x-4*s,y-1*s,w+8*s,4*s,C.dark);B(x+2*s,y+h-5*s,w-4*s,5*s,C.wood)}
 function rice(x,y,w,h){B(x,y,w,h,C.soil);B(x+5,y+5,w-10,h-10,C.soil2);for(let xx=x+9;xx<x+w-8;xx+=10)for(let yy=y+9;yy<y+h-7;yy+=10){B(xx,yy,2,6,C.rice);B(xx+3,yy-2,2,7,C.rice2);if((xx+yy)%3===0)B(xx+6,yy+1,2,5,C.rice3)}}
@@ -8,25 +8,9 @@ function sakura(x,y,s=1){B(x-5*s,y,10*s,38*s,C.wood);B(x-2*s,y,5*s,31*s,C.wood2)
 function torii(x,y,s=1){B(x-58*s,y-55*s,9*s,78*s,C.red);B(x+49*s,y-55*s,9*s,78*s,C.red);B(x-72*s,y-68*s,144*s,10*s,C.red);B(x-60*s,y-78*s,120*s,8*s,C.red2);B(x-44*s,y-49*s,88*s,7*s,C.red2);B(x-5*s,y-49*s,10*s,52*s,C.red)}
 function lantern(x,y){B(x,y,4,25,C.dark);B(x-9,y-8,18,11,C.stone);B(x-6,y-15,12,7,C.stone2);B(x-5,y-5,10,8,C.gold);B(x-6,y+25,12,3,C.dark)}
 function well(x,y){B(x-34,y,68,12,C.stone);B(x-28,y-18,56,18,C.stone2);B(x-22,y-14,44,10,C.dark);B(x-30,y-32,7,22,C.wood);B(x+23,y-32,7,22,C.wood);B(x-34,y-38,68,7,C.wood2);B(x-3,y-34,6,27,C.dark)}
-function draw(){
- // deep water buffer around the new landmass
- B(3500,650,1500,900,'#245e73');for(let i=0;i<300;i++){const x=3500+(i*83)%1500,y=670+(i*47)%860;B(x,y,3+(i%4)*2,2,i%5?'#2f7383':'#65a1a8')}
- // broad island silhouette and layered shoreline
- B(X+20,Y+28,W-40,H-58,C.edge);B(X,Y+20,W,32,C.land2);B(X+35,Y+48,W-70,H-100,C.land);B(X+16,Y+H-45,W-32,28,C.edge);
- // main roads
- B(3840,1095,900,68,C.path);B(4190,820,64,610,C.path2);B(3840,995,360,48,C.path2);B(4400,1190,300,48,C.path2);B(4540,900,210,42,C.path2);
- house(3890,900,1.05);house(4110,1050,.95,C.roof2);house(4340,875,1.0);house(4490,1080,.9,C.roof2);house(4630,920,.82);
- torii(4218,1000,1.05);well(4250,1170);well(4050,1280);
- rice(3860,1190,250,130);rice(4135,1245,215,120);rice(4425,1265,275,130);rice(4510,1000,205,88);rice(4290,800,180,72);
- fence(3855,1178,255);fence(4130,1233,220);fence(4420,1255,280);fence(4500,990,210);
- sakura(3990,1035,1.25);sakura(4400,1045,1.35);sakura(4710,1130,1.25);sakura(4250,1360,1.1);
- lantern(4000,1070);lantern(4210,1070);lantern(4390,1130);lantern(4590,1160);lantern(4720,1210);
- for(let i=0;i<30;i++){const x=4020+(i*17)%115,y=1170+(i*31)%105;B(x,y,5,25,C.bamboo);B(x+1,y-8,3,12,C.bamboo);B(x-4,y+5,5,3,C.bamboo)}
- // dense small pixels: grass, flowers, stones and rice rows
- for(let i=0;i<260;i++){const x=3850+(i*79)%920,y=780+(i*53)%670,q=i%7;if(q<2)B(x,y,2,6,C.rice3);else if(q<4)B(x,y,4,3,C.stone2);else if(q===4)B(x,y,3,5,C.pink);else B(x,y,3,3,C.land2)}
- // stone shoreline highlights and little docks
- for(let i=0;i<34;i++){const x=3840+(i*97)%940,y=1480+(i%3)*4;B(x,y,12+(i%3)*4,4,C.stone2)}
-}
-const oldWorld=world;world=function(){oldWorld();draw();if(p.x>3600&&typeof hero==='function')hero();if(p.x>3600&&typeof arrow==='function')arrow()};
-window.moonwoodIslandExpansion={width:W,height:H,x:X,y:Y,densePixelDetail:true,separateDestination:true};
+function drawIsland(){B(3500,650,1500,900,C.water);for(let i=0;i<300;i++){const x=3500+(i*83)%1500,y=670+(i*47)%860;B(x,y,3+(i%4)*2,2,i%5?'#2f7383':'#65a1a8')}B(X+20,Y+28,W-40,H-58,C.edge);B(X,Y+20,W,32,C.land2);B(X+35,Y+48,W-70,H-100,C.land);B(X+16,Y+H-45,W-32,28,C.edge);B(3840,1095,900,68,C.path);B(4190,820,64,610,C.path2);B(3840,995,360,48,C.path2);B(4400,1190,300,48,C.path2);B(4540,900,210,42,C.path2);house(3890,900,1.05);house(4110,1050,.95,C.roof2);house(4340,875,1);house(4490,1080,.9,C.roof2);house(4630,920,.82);torii(4218,1000,1.05);well(4250,1170);well(4050,1280);rice(3860,1190,250,130);rice(4135,1245,215,120);rice(4425,1265,275,130);rice(4510,1000,205,88);rice(4290,800,180,72);fence(3855,1178,255);fence(4130,1233,220);fence(4420,1255,280);fence(4500,990,210);sakura(3990,1035,1.25);sakura(4400,1045,1.35);sakura(4710,1130,1.25);sakura(4250,1360,1.1);lantern(4000,1070);lantern(4210,1070);lantern(4390,1130);lantern(4590,1160);lantern(4720,1210);for(let i=0;i<30;i++){const x=4020+(i*17)%115,y=1170+(i*31)%105;B(x,y,5,25,C.bamboo);B(x+1,y-8,3,12,C.bamboo);B(x-4,y+5,5,3,C.bamboo)}well(4050,1280);for(let i=0;i<260;i++){const x=3850+(i*79)%920,y=780+(i*53)%670,q=i%7;if(q<2)B(x,y,2,6,C.rice3);else if(q<4)B(x,y,4,3,C.stone2);else if(q===4)B(x,y,3,5,C.pink);else B(x,y,3,3,C.land2)}for(let i=0;i<34;i++){const x=3840+(i*97)%940,y=1480+(i%3)*4;B(x,y,12+(i%3)*4,4,C.stone2)}}
+const oldWorld=world;world=function(){oldWorld();drawIsland();if(p.x>3600&&typeof hero==='function')hero();if(p.x>3600&&typeof arrow==='function')arrow()};
+const oldBlocked=typeof blocked==='function'?blocked:null;blocked=function(x,y){if(x>=3520&&x<=3890&&y>=1098&&y<=1242)return false;if(x>=3780&&x<=4840&&y>=720&&y<=1540){const houses=[{x:3890,y:900,w:140,h:82},{x:4110,y:1050,w:126,h:78},{x:4340,y:875,w:132,h:82},{x:4490,y:1080,w:120,h:72},{x:4630,y:920,w:108,h:68}];for(const q of houses)if(x>=q.x-15&&x<=q.x+q.w+15&&y>=q.y-15&&y<=q.y+q.h+15)return true;return false}return oldBlocked?oldBlocked(x,y):true};
+function camera(){const viewH=c.height/VIEW_Y;return{x:Math.max(0,Math.min(SCENE_W-c.width,p.x-c.width/2)),y:Math.max(0,Math.min(SCENE_H-viewH,p.y-viewH/2)),scaleY:VIEW_Y}}
+draw=function(){g.clearRect(0,0,c.width,c.height);const q=camera();g.save();g.scale(1,VIEW_Y);g.translate(-q.x,-q.y);world();g.restore();if(typeof updateUI==='function')updateUI()};window.moonwoodCamera=camera;window.moonwoodIslandExpansion={width:W,height:H,x:X,y:Y,densePixelDetail:true,separateDestination:true,expandedCamera:true};
 })();
