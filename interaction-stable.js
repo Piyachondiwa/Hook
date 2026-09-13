@@ -7,12 +7,11 @@
   const info = document.getElementById('treeInfo');
   if (!ui || !info) return;
 
-  let mode = 'idle'; // idle | holding | open
+  let mode = 'idle';
   let startedAt = 0;
   let lockedTree = null;
 
-  const legacyPrompts = () => document.querySelectorAll('.treePrompt');
-  const hideLegacy = () => legacyPrompts().forEach(el => {
+  const hideLegacy = () => document.querySelectorAll('.treePrompt').forEach(el => {
     el.hidden = true;
     el.style.display = 'none';
   });
@@ -33,19 +32,13 @@
   })();
 
   function state() {
-    try {
-      return typeof window.moonwoodState === 'function' ? window.moonwoodState() : null;
-    } catch (_) {
-      return null;
-    }
+    try { return typeof window.moonwoodState === 'function' ? window.moonwoodState() : null; }
+    catch (_) { return null; }
   }
 
-  function tree() {
-    try {
-      return typeof window.closestTree === 'function' ? window.closestTree() : null;
-    } catch (_) {
-      return null;
-    }
+  function currentTree() {
+    try { return typeof window.closestTree === 'function' ? window.closestTree() : null; }
+    catch (_) { return null; }
   }
 
   function distanceToTree(t, s) {
@@ -61,11 +54,12 @@
 
   function setPrompt(t) {
     hideLegacy();
-    const visible = mode === 'idle' && canInteract(t);
+    const visible = mode === 'idle' && !state()?.treeOpen && canInteract(t);
     prompt.hidden = !visible;
-    if (!visible) return;
-    const name = t?.info?.[0] || '???';
-    prompt.innerHTML = `<span class="holdTreeName">${name}</span><small>E &nbsp; กดค้างเพื่อค้นหา</small>`;
+    if (visible) {
+      const name = t?.info?.[0] || '???';
+      prompt.innerHTML = `<span class="holdTreeName">${name}</span><small>E &nbsp; กดค้างเพื่อค้นหา</small>`;
+    }
   }
 
   function setProgress(value) {
@@ -77,37 +71,25 @@
     progress.hidden = mode !== 'holding';
   }
 
-  function resetHold() {
-    if (mode === 'holding') {
-      mode = 'idle';
-      lockedTree = null;
-      startedAt = 0;
-      setProgress(0);
-    }
+  function stopHold() {
+    mode = 'idle';
+    startedAt = 0;
+    lockedTree = null;
+    setProgress(0);
   }
 
   function openInfo(t) {
-    if (!canInteract(t) || !t?.info) return false;
+    if (!canInteract(t) || !t?.info) return;
     const s = t.info;
     info.innerHTML = `<h3>${s[0]}</h3><p class="latin">${s[1]} · <i>${s[2]}</i></p><p><b>ประเภท:</b> ${s[3]}</p><p class="fact">${s[4]}</p><div class="close">E &nbsp; ปิดข้อมูล</div>`;
     info.hidden = false;
     mode = 'open';
     prompt.hidden = true;
-    setProgress(0);
-    return true;
-  }
-
-  function closeInfo() {
-    info.hidden = true;
-    mode = 'idle';
-    lockedTree = null;
-    startedAt = 0;
-    setProgress(0);
-    setPrompt(tree());
+    progress.hidden = true;
   }
 
   function beginHold() {
-    const t = tree();
+    const t = currentTree();
     if (mode !== 'idle' || !canInteract(t)) return;
     mode = 'holding';
     lockedTree = t;
@@ -116,27 +98,37 @@
     setProgress(0);
   }
 
+  function closeInfo() {
+    info.hidden = true;
+    mode = 'idle';
+    startedAt = 0;
+    lockedTree = null;
+    setProgress(0);
+    setPrompt(currentTree());
+  }
+
   function tick(now) {
     hideLegacy();
-    const current = tree();
+    const t = currentTree();
 
     if (mode === 'holding') {
-      if (current !== lockedTree || !canInteract(lockedTree)) {
-        resetHold();
-        setPrompt(current);
+      if (t !== lockedTree || !canInteract(lockedTree)) {
+        stopHold();
+        setPrompt(t);
       } else {
         const pct = ((now - startedAt) / HOLD_MS) * 100;
         setProgress(pct);
         if (pct >= 100) {
-          mode = 'idle';
+          mode = 'open';
           lockedTree = null;
           startedAt = 0;
-          setProgress(0);
-          openInfo(current);
+          setProgress(100);
+          openInfo(t);
         }
       }
     } else if (mode === 'idle') {
-      setPrompt(current);
+      setPrompt(t);
+      progress.hidden = true;
     } else {
       prompt.hidden = true;
       progress.hidden = true;
@@ -145,7 +137,6 @@
     requestAnimationFrame(tick);
   }
 
-  // Capture E before game.js so the legacy one-tap path never runs.
   addEventListener('keydown', ev => {
     if (ev.key.toLowerCase() !== 'e') return;
     ev.preventDefault();
@@ -160,14 +151,14 @@
     ev.preventDefault();
     ev.stopImmediatePropagation();
     if (mode === 'holding') {
-      resetHold();
-      setPrompt(tree());
+      stopHold();
+      setPrompt(currentTree());
     }
   }, true);
 
   addEventListener('blur', () => {
-    resetHold();
-    if (mode === 'idle') setPrompt(tree());
+    if (mode === 'holding') stopHold();
+    if (mode === 'idle') setPrompt(currentTree());
   });
 
   info.hidden = true;
