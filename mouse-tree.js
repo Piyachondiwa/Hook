@@ -28,10 +28,13 @@
     const rect = canvas.getBoundingClientRect();
     const sx = canvas.width / rect.width;
     const sy = canvas.height / rect.height;
-    const x = (ev.clientX - rect.left) * sx;
-    const y = (ev.clientY - rect.top) * sy;
+    const screenX = (ev.clientX - rect.left) * sx;
+    const screenY = (ev.clientY - rect.top) * sy;
     const cam = getCamera();
-    return { x: x + cam.x, y: y + cam.y, screenX: ev.clientX, screenY: ev.clientY };
+    const centerY = canvas.height / 2 + 10;
+    const x = screenX + cam.x;
+    const y = cam.y + ((screenY - centerY) / .86) + centerY;
+    return { x, y, screenX: ev.clientX, screenY: ev.clientY };
   }
 
   function insideTree(t, x, y) {
