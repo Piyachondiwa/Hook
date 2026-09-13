@@ -25,119 +25,199 @@ const thaiSpecies=[
 ['มะเกลือ','Ebony Tree','Diospyros mollis','ไม้ต้นผลัดใบ','ไม้ต้นพื้นถิ่นของไทยในสกุล Diospyros ผลอ่อนมีสีเขียวและผลแก่เปลี่ยนเป็นสีเข้ม']
 ];
 species.splice(0,species.length,...thaiSpecies);
+trees.forEach(t=>{t.type=Math.floor(rnd(t.x+37,t.y+71)*species.length);t.visualType=t.type;t.info=species[t.type]});
 
-/* ---------------------------------------------------------
-   SPECIES-SPECIFIC TREE ART
-   เปลี่ยนจากต้นไม้ 5 แบบซ้ำ ๆ เป็น silhouette ที่อิงลักษณะจริง
-   เน้นทรงพุ่ม ลำต้น และจุดเด่นของแต่ละชนิดในสไตล์ pixel art
---------------------------------------------------------- */
-const _baseTree=treeBase;
-const _canopyTree=treeCanopy;
-
-function trR(x,y,w,h,c){R(x,y,w,h,c)}
-function trBlock(x,y,s,parts){parts.forEach(a=>trR(x+a[0]*s,y+a[1]*s,a[2]*s,a[3]*s,a[4]))}
-
-function speciesPalette(i){
-  const palettes=[
-    ['#3b271d','#754a2f','#9a633b','#173d29','#245b35','#3c7542','#639352'],
-    ['#35251e','#6c472e','#9a6740','#123927','#1b5030','#2c6939','#4b8248'],
-    ['#30231d','#613e2b','#865638','#143526','#1b4b31','#2b663d','#477c49'],
-    ['#38251d','#71452c','#a06037','#193b28','#255a34','#397341','#5c8c50'],
-    ['#39271e','#6a422d','#925d38','#243d29','#345b35','#4c7540','#6f914e'],
-    ['#30241e','#5e402d','#875d3d','#173526','#224d30','#346a3b','#54824a']
-  ];
-  return palettes[i%palettes.length];
+/* ------------------------------------------------------------------
+   HIGH DETAIL SPECIES TREE RENDERER
+   Designed for the 640x360 pixel-art viewport. Each species gets its
+   own silhouette, branch pattern, foliage texture, bark and seasonal
+   accents instead of five recycled tree shapes.
+------------------------------------------------------------------- */
+const treePalette={
+  deep:'#102d21', dark:'#17452c', mid:'#28623a', light:'#4d8649', hi:'#78a95b', bark:'#4a3024', bark2:'#6f4730', barkHi:'#95613e'
+};
+function px(x,y,w,h,c){R(x,y,w,h,c)}
+function leaf(x,y,c,w=5,h=4){px(x,y,w,h,c);px(x+1,y-2,Math.max(2,w-2),2,c)}
+function branch(x,y,dx,dy,c,w=3){
+  const n=Math.max(Math.abs(dx),Math.abs(dy),1),sx=dx/n,sy=dy/n;
+  for(let i=0;i<n;i+=3)px(x+dx*(i/n),y+dy*(i/n),w,w,c);
 }
-
-function drawTrunkProfile(t,profile){
-  const s=treeScale(t),x=t.x,y=t.y,p=speciesPalette(t.type),w=profile[0]||1;
+function foliageCluster(x,y,rx,ry,cols,seedOffset=0){
+  const steps=Math.max(9,Math.floor((rx+ry)/7));
+  px(x-rx*.72,y-ry*.35,rx*1.45,ry*.9,cols[0]);
+  for(let i=0;i<steps;i++){
+    const a=rnd(x+i*17+seedOffset,y+i*31+seedOffset)*6.283;
+    const rr=.35+.55*rnd(x+i*29+seedOffset,y-i*13+seedOffset);
+    const lx=x+Math.cos(a)*rx*rr,ly=y+Math.sin(a)*ry*rr;
+    const c=cols[i%cols.length];
+    leaf(lx,ly,c,4+Math.floor(rnd(i+seedOffset,9)*6),3+Math.floor(rnd(i+seedOffset,17)*4));
+  }
+}
+function barkTrunk(t,s,width=16,height=54,style=0){
+  const x=t.x,y=t.y;
+  px(x-width*s/2,y-2*s,width*s,height*s,style===1?'#3f2b22':'#4b3023');
+  px(x-width*s*.22,y+4*s,width*s*.24,height*s*.72,style===2?'#765039':'#71472f');
+  px(x+width*s*.08,y+7*s,width*s*.16,height*s*.64,style===1?'#5b3b2b':'#91603d');
+  if(style===1){for(let i=0;i<7;i++)px(x-width*s*.42+(i%2)*width*s*.5,y+8*s+i*5*s,3*s,2*s,'#2e2521')}
+  if(style===2){for(let i=0;i<5;i++)px(x-width*s*.35,y+10*s+i*7*s,5*s,2*s,'#a06c45')}
+  px(x-width*s*.8,y+height*s*.72,12*s,5*s,'#3b281f');px(x+width*s*.15,y+height*s*.72,14*s,5*s,'#3b281f');
+}
+function canopyBase(t,s,rx,ry,cols){
+  foliageCluster(t.x,t.y-30*s,rx*s,ry*s,cols,Math.floor(t.v*999));
+  foliageCluster(t.x-rx*.45*s,t.y-15*s,rx*.62*s,ry*.65*s,cols,17);
+  foliageCluster(t.x+rx*.42*s,t.y-13*s,rx*.64*s,ry*.62*s,cols,31);
+}
+function detailedTreeBase(t){
+  const s=treeScale(t), name=t.info?.[0]||'';
   treeShadow(t);
-  R(x-8*s*w,y-2*s,16*s*w,52*s,p[0]);
-  R(x-4*s*w,y+4*s,8*s*w,43*s,p[1]);
-  R(x+2*s*w,y+6*s,3*s*w,37*s,p[2]);
-  if(profile[1])R(x-10*s*w,y+42*s,8*s*w,5,p[1]);
-  if(profile[2])R(x+5*s*w,y+43*s,12*s*w,5,p[1]);
+  if(name==='ตะเคียนทอง'){
+    barkTrunk(t,s,21,56,1);
+    px(t.x-17*s,t.y+39*s,9*s,8*s,'#3a2922');px(t.x+8*s,t.y+40*s,10*s,8*s,'#3a2922');
+    px(t.x-8*s,t.y+9*s,3*s,32*s,'#9a6540');px(t.x+5*s,t.y+3*s,3*s,36*s,'#2f2925');
+    for(let i=0;i<8;i++)px(t.x-9*s+(i%3)*6*s,t.y+5*s+i*6*s,4*s,2*s,i%2?'#5d3b2c':'#754b32');
+  }else if(name==='จามจุรี'){
+    barkTrunk(t,s,19,48,2);px(t.x-25*s,t.y+39*s,28*s,7*s,'#493126');px(t.x+2*s,t.y+39*s,27*s,7*s,'#493126');
+    branch(t.x,t.y+10*s,-42*s,-27*s,'#54382a',3*s);branch(t.x,t.y+10*s,42*s,-27*s,'#54382a',3*s);
+  }else if(name==='ราชพฤกษ์'){
+    barkTrunk(t,s,13,51,0);px(t.x-10*s,t.y+42*s,9*s,5*s,'#4a3023');px(t.x+2*s,t.y+43*s,12*s,5*s,'#4a3023');
+  }else if(name==='ปีบ'){
+    barkTrunk(t,s,13,57,1);for(let i=0;i<6;i++)px(t.x-5*s+(i%2)*6*s,t.y+5*s+i*7*s,2*s,5*s,'#9b6946');
+  }else if(name==='มะเกลือ'){
+    barkTrunk(t,s,17,53,1);for(let i=0;i<6;i++)px(t.x-7*s+(i%3)*5*s,t.y+7*s+i*6*s,3*s,2*s,'#2e2723');
+  }else{
+    barkTrunk(t,s,15,53,0);
+  }
 }
-
-function drawFoliage(t,parts){
-  const s=treeScale(t),x=t.x,y=t.y,p=speciesPalette(t.type);
-  parts.forEach(a=>R(x+a[0]*s,y+a[1]*s,a[2]*s,a[3]*s,p[a[4]||3]));
-}
-
-function speciesCanopy(t){
-  const i=t.type,s=treeScale(t),x=t.x,y=t.y,p=speciesPalette(i);
-  if(i===0){ // สัก: ใบใหญ่ + พุ่มสูงโปร่ง
-    drawFoliage(t,[[-43,-18,86,38,3],[-34,-43,68,34,4],[-20,-65,40,30,5],[-48,-4,26,12,5],[22,-28,27,12,6],[-10,-54,17,9,6]]);
-  }else if(i===1){ // ยางนา: ทรงสูงคล้ายเจดีย์
-    drawFoliage(t,[[-35,-15,70,35,3],[-30,-39,60,34,4],[-22,-61,44,31,5],[-12,-79,25,24,6],[-45,-7,23,10,4],[22,-30,22,10,5]]);
-  }else if(i===2){ // พะยูง: ใบเล็ก พุ่มละเอียด
-    drawFoliage(t,[[-45,-15,90,32,3],[-39,-36,78,28,4],[-30,-55,60,25,5],[-18,-70,36,21,6],[-51,-4,25,8,5],[27,-25,27,9,6]]);
-  }else if(i===3){ // ประดู่ป่า: พุ่มกลมแน่น
-    drawFoliage(t,[[-48,-18,96,39,3],[-39,-43,78,33,4],[-25,-63,50,28,5],[-43,-7,27,11,5],[18,-31,31,12,6],[-9,-53,23,9,6]]);
-  }else if(i===4){ // แดง: กิ่งแผ่และยอดแบน
-    drawFoliage(t,[[-52,-12,104,31,3],[-42,-34,84,25,4],[-26,-50,52,22,5],[-12,-64,27,19,6],[-57,-1,28,9,5],[29,-18,30,9,6]]);
-  }else if(i===5){ // ชิงชัน: พุ่มชั้น ๆ
-    drawFoliage(t,[[-44,-10,88,28,3],[-37,-32,74,25,4],[-25,-51,50,22,5],[-12,-68,26,20,6],[-49,-1,23,8,5],[25,-20,27,9,6]]);
-  }else if(i===6){ // มะค่าโมง: ลำต้นใหญ่ พุ่มกว้าง
-    drawFoliage(t,[[-52,-13,104,34,3],[-44,-39,88,30,4],[-28,-59,56,25,5],[-12,-76,27,22,6],[-59,-2,28,10,5],[31,-24,31,10,6]]);
-  }else if(i===7||i===8){ // เต็ง/รัง: ทรงพุ่มแผ่แบบป่าเต็งรัง
-    drawFoliage(t,[[-54,-11,108,31,3],[-44,-32,88,27,4],[-29,-51,58,22,5],[-17,-65,35,19,6],[-61,-2,31,9,5],[34,-19,31,9,6]]);
-  }else if(i===9){ // พะยอม: พุ่มกลมสูง ดอกอ่อน
-    drawFoliage(t,[[-46,-17,92,36,3],[-38,-40,76,31,4],[-25,-61,50,26,5],[-12,-76,27,20,6],[-50,-5,24,9,5],[28,-27,25,9,6]]);
-  }else if(i===10){ // ตะเคียนทอง: พุ่มทึบกลม/เจดีย์ต่ำ
-    drawFoliage(t,[[-52,-17,104,40,3],[-44,-43,88,34,4],[-31,-62,62,27,5],[-17,-78,35,21,6],[-57,-5,30,11,5],[30,-29,31,11,6]]);
-    R(x-26*s,y-5*s,7*s,5,p[6]);R(x+19*s,y-30*s,6*s,5,p[6]);
-  }else if(i===11||i===12){ // ตะแบก/อินทนิล: พุ่มโปร่ง + ช่อดอก
-    drawFoliage(t,[[-45,-13,90,31,3],[-37,-37,74,27,4],[-24,-58,48,24,5],[-11,-73,24,20,6],[-52,-1,25,8,5],[28,-23,27,9,6]]);
-    const flower=i===12?'#b58ad7':'#a878b6';
-    R(x-31*s,y-30*s,4*s,7*s,flower);R(x+25*s,y-20*s,4*s,8*s,flower);R(x-5*s,y-68*s,4*s,8*s,flower);
-  }else if(i===13){ // ราชพฤกษ์: กิ่งห้อย + ดอกเหลือง
-    drawFoliage(t,[[-48,-9,96,28,3],[-38,-29,76,24,4],[-24,-48,48,21,5],[-11,-62,23,18,6]]);
-    const gold='#e6c34d';
-    [[-30,2],[-10,5],[10,2],[29,4],[-20,-10],[17,-12]].forEach(a=>{R(x+a[0]*s,y+a[1]*s,4*s,20*s,gold);R(x+(a[0]-3)*s,y+(a[1]+15)*s,10*s,6*s,gold)});
-  }else if(i===14){ // ปีบ: ทรงสูงโปร่ง กิ่งชูขึ้น
-    drawFoliage(t,[[-39,-13,78,28,3],[-31,-37,62,25,4],[-21,-57,42,22,5],[-10,-78,22,25,6],[-46,-2,24,8,5],[23,-25,23,8,6]]);
-    R(x-28*s,y-42*s,3*s,12*s,'#e8e4d3');R(x+23*s,y-29*s,3*s,11*s,'#e8e4d3');R(x-3*s,y-67*s,3*s,12*s,'#f0eadc');
-  }else if(i===15){ // จามจุรี: ร่มกว้างชัดเจน
-    drawFoliage(t,[[-65,-10,130,31,3],[-55,-30,110,25,4],[-38,-47,76,22,5],[-18,-60,36,18,6],[-70,-1,35,9,5],[35,-22,36,9,6]]);
-  }else if(i===16){ // มะขาม: พุ่มหลายชั้น ใบละเอียด
-    drawFoliage(t,[[-49,-12,98,27,3],[-41,-31,82,22,4],[-31,-48,62,20,5],[-18,-63,36,18,6],[-56,-2,28,8,5],[28,-19,29,8,6]]);
-  }else if(i===17){ // หว้า: พุ่มทึบสูง
-    drawFoliage(t,[[-48,-18,96,40,3],[-39,-43,78,34,4],[-25,-63,50,27,5],[-12,-78,25,21,6],[-53,-5,26,10,5],[29,-30,28,10,6]]);
-  }else if(i===18){ // สะเดา: พุ่มโปร่ง ใบเล็ก
-    drawFoliage(t,[[-43,-13,86,29,3],[-34,-34,68,24,4],[-22,-54,44,21,5],[-10,-69,22,19,6],[-49,-2,24,8,5],[26,-23,25,8,6]]);
-  }else if(i===19){ // กันเกรา: พุ่มเรียวแน่น
-    drawFoliage(t,[[-43,-18,86,37,3],[-35,-43,70,32,4],[-23,-64,46,26,5],[-10,-80,22,22,6],[-48,-6,25,9,5],[25,-31,25,9,6]]);
-  }else if(i===20){ // มะค่าแต้: เรือนยอดกว้างและหนัก
-    drawFoliage(t,[[-57,-14,114,36,3],[-48,-40,96,31,4],[-31,-60,62,26,5],[-14,-76,29,21,6],[-64,-2,31,10,5],[36,-26,33,10,6]]);
-  }else if(i===21){ // ยมหิน: ใบใหญ่เป็นชั้น
-    drawFoliage(t,[[-48,-13,96,32,3],[-39,-39,78,29,4],[-25,-62,50,26,5],[-11,-80,24,23,6],[-53,-2,27,9,5],[27,-28,29,9,6]]);
-  }else if(i===22){ // มะหาด: หนาทึบแบบ Artocarpus
-    drawFoliage(t,[[-54,-18,108,40,3],[-45,-43,90,33,4],[-30,-63,60,28,5],[-15,-79,30,22,6],[-59,-6,29,11,5],[31,-31,31,11,6]]);
-  }else{ // มะเกลือ: ทรงพุ่มกลมเข้ม
-    drawFoliage(t,[[-47,-18,94,39,3],[-39,-42,78,32,4],[-26,-62,52,26,5],[-12,-77,25,21,6],[-51,-5,26,10,5],[27,-29,28,10,6]]);
+function detailedTreeCanopy(t){
+  const s=treeScale(t),x=t.x,y=t.y,name=t.info?.[0]||'';
+  const C=treePalette;
+  if(name==='สัก'){
+    branch(x,y-8*s,-30*s,-30*s,C.bark2,3*s);branch(x,y-8*s,31*s,-31*s,C.bark2,3*s);
+    branch(x-4*s,y-22*s,-35*s,-5*s,C.bark2,2*s);branch(x+4*s,y-22*s,36*s,-6*s,C.bark2,2*s);
+    foliageCluster(x,y-48*s,40*s,31*s,['#1b4f30','#2b6939','#4d8248','#679657'],7);
+    foliageCluster(x-25*s,y-35*s,22*s,18*s,['#245c35','#3c7742','#6b9956'],11);
+    foliageCluster(x+26*s,y-34*s,23*s,18*s,['#245c35','#3c7742','#6b9956'],19);
+    for(let i=0;i<14;i++)leaf(x-34*s+rnd(i,2)*68*s,y-56*s+rnd(i,3)*30*s,i%3?'#4f8248':'#739e5b',7*s,4*s);
+  }else if(name==='ยางนา'){
+    branch(x,y-8*s,-25*s,-39*s,C.bark2,3*s);branch(x,y-8*s,26*s,-40*s,C.bark2,3*s);
+    foliageCluster(x,y-57*s,34*s,45*s,['#123b28','#1b5130','#2d6a3a','#4b8147'],3);
+    foliageCluster(x-20*s,y-42*s,20*s,26*s,['#19492c','#2b6337','#56894d'],9);
+    foliageCluster(x+21*s,y-43*s,20*s,27*s,['#19492c','#2b6337','#56894d'],13);
+    for(let i=0;i<9;i++)leaf(x-24*s+i*6*s,y-76*s+rnd(i,7)*22*s,'#5a8c4d',5*s,7*s);
+  }else if(name==='พะยูง'){
+    branch(x,y-10*s,-32*s,-25*s,C.bark2,2*s);branch(x,y-10*s,34*s,-24*s,C.bark2,2*s);
+    foliageCluster(x,y-45*s,40*s,28*s,['#143c28','#205630','#34733e','#5a8b4e'],23);
+    for(let i=0;i<18;i++)leaf(x-35*s+rnd(i,4)*70*s,y-61*s+rnd(i,6)*29*s,i%4?'#3d7642':'#679454',3*s,3*s);
+  }else if(name==='ประดู่ป่า'){
+    branch(x,y-9*s,-36*s,-31*s,C.bark2,3*s);branch(x,y-9*s,37*s,-31*s,C.bark2,3*s);
+    foliageCluster(x,y-48*s,44*s,29*s,['#16442a','#276138','#3f7942','#659450'],29);
+    foliageCluster(x-27*s,y-28*s,24*s,16*s,['#235a34','#4b8248','#729a58'],33);
+    foliageCluster(x+29*s,y-29*s,24*s,16*s,['#235a34','#4b8248','#729a58'],37);
+    if(rnd(x,y)>.35)for(let i=0;i<7;i++)leaf(x-29*s+i*9*s,y-61*s+rnd(i,5)*18*s,'#6c9653',5*s,5*s);
+  }else if(name==='แดง'){
+    branch(x,y-8*s,-38*s,-27*s,C.bark2,3*s);branch(x,y-8*s,39*s,-27*s,C.bark2,3*s);
+    foliageCluster(x,y-42*s,50*s,23*s,['#183f29','#275c35','#3f7541','#5e8b4e'],41);
+    foliageCluster(x-32*s,y-29*s,25*s,14*s,['#245732','#4b8047','#6a9652'],47);
+    foliageCluster(x+33*s,y-30*s,26*s,14*s,['#245732','#4b8047','#6a9652'],53);
+  }else if(name==='ชิงชัน'){
+    branch(x,y-8*s,-35*s,-30*s,C.bark2,2*s);branch(x,y-8*s,35*s,-30*s,C.bark2,2*s);
+    foliageCluster(x,y-47*s,38*s,26*s,['#183f29','#285d36','#497e46','#6a9654'],61);
+    for(let i=0;i<16;i++)leaf(x-31*s+rnd(i,8)*62*s,y-60*s+rnd(i,12)*27*s,i%5?'#4b8247':'#739c59',4*s,3*s);
+    if(rnd(x+4,y)>.7)for(let i=0;i<3;i++)px(x-17*s+i*16*s,y-28*s,4*s,4*s,'#9a75b5');
+  }else if(name==='มะค่าโมง'){
+    branch(x,y-8*s,-40*s,-29*s,C.bark2,3*s);branch(x,y-8*s,41*s,-29*s,C.bark2,3*s);
+    foliageCluster(x,y-46*s,48*s,29*s,['#153e29','#245d35','#3f7742','#6a9554'],71);
+    foliageCluster(x-34*s,y-29*s,24*s,17*s,['#245832','#4e8249','#70985b'],73);
+    foliageCluster(x+34*s,y-29*s,24*s,17*s,['#245832','#4e8249','#70985b'],79);
+  }else if(name==='เต็ง'||name==='รัง'){
+    branch(x,y-8*s,-39*s,-22*s,C.bark2,3*s);branch(x,y-8*s,39*s,-22*s,C.bark2,3*s);
+    foliageCluster(x,y-40*s,48*s,24*s,name==='เต็ง'?['#183e29','#285d35','#557d43','#718c4c']:['#163e27','#2a5e34','#4c7b42','#759050'],83);
+    foliageCluster(x-34*s,y-27*s,26*s,15*s,['#214f30','#497842','#728d50'],89);
+    foliageCluster(x+35*s,y-27*s,27*s,15*s,['#214f30','#497842','#728d50'],97);
+  }else if(name==='พะยอม'){
+    branch(x,y-8*s,-31*s,-31*s,C.bark2,2*s);branch(x,y-8*s,32*s,-31*s,C.bark2,2*s);
+    foliageCluster(x,y-49*s,39*s,31*s,['#16432a','#275f36','#4a8248','#759a5b'],101);
+    for(let i=0;i<6;i++)px(x-28*s+i*11*s,y-69*s+rnd(i,3)*22*s,4*s,3*s,'#e1dfbd');
+  }else if(name==='ตะเคียนทอง'){
+    branch(x,y-4*s,-46*s,-31*s,C.bark2,4*s);branch(x,y-4*s,47*s,-31*s,C.bark2,4*s);
+    branch(x-2*s,y-18*s,-30*s,-29*s,C.bark2,2*s);branch(x+2*s,y-18*s,30*s,-29*s,C.bark2,2*s);
+    foliageCluster(x,y-48*s,47*s,34*s,['#0f3323','#17492b','#24643a','#3e7a43','#5b914e'],113);
+    foliageCluster(x-31*s,y-28*s,27*s,21*s,['#17452a','#2c6939','#50884a'],127);
+    foliageCluster(x+32*s,y-29*s,28*s,21*s,['#17452a','#2c6939','#50884a'],139);
+    for(let i=0;i<12;i++)leaf(x-38*s+rnd(i,2)*76*s,y-64*s+rnd(i,5)*33*s,i%4?'#397744':'#679656',5*s,5*s);
+    if(rnd(x,y)>.45)for(let i=0;i<4;i++)px(x-25*s+i*16*s,y-30*s+rnd(i,8)*10*s,3*s,3*s,'#e4d7a1');
+  }else if(name==='ตะแบกนา'||name==='อินทนิลน้ำ'){
+    branch(x,y-7*s,-32*s,-34*s,C.bark2,3*s);branch(x,y-7*s,34*s,-34*s,C.bark2,3*s);
+    foliageCluster(x,y-49*s,40*s,36*s,['#17452b','#2b6638','#4b8147','#6e9656'],151);
+    foliageCluster(x-27*s,y-29*s,24*s,18*s,['#255b34','#4a8046','#6d9655'],157);
+    foliageCluster(x+28*s,y-29*s,24*s,18*s,['#255b34','#4a8046','#6d9655'],163);
+    const flower=name==='อินทนิลน้ำ'?'#b38bd0':'#b875a0';
+    for(let i=0;i<10;i++)px(x-32*s+rnd(i,21)*64*s,y-61*s+rnd(i,25)*29*s,5*s,4*s,flower);
+    for(let i=0;i<5;i++)px(x-22*s+i*11*s,y-70*s+rnd(i,26)*13*s,3*s,3*s,'#d7b5e2');
+  }else if(name==='ราชพฤกษ์'){
+    branch(x,y-9*s,-42*s,-30*s,C.bark2,3*s);branch(x,y-9*s,42*s,-30*s,C.bark2,3*s);
+    foliageCluster(x,y-48*s,43*s,25*s,['#1b4a2c','#2b6537','#4d8245','#6e9854'],173);
+    for(let side=-1;side<=1;side+=2)for(let i=0;i<5;i++){
+      const xx=x+side*(18+i*5)*s, yy=y-26*s-i*6*s;
+      px(xx,yy,4*s,10*s,'#d8ad35');px(xx+2*s,yy+8*s,4*s,10*s,'#edc74c');px(xx-2*s,yy+15*s,4*s,9*s,'#c99928');
+    }
+  }else if(name==='ปีบ'){
+    branch(x,y-10*s,-27*s,-38*s,C.bark2,2*s);branch(x,y-10*s,28*s,-38*s,C.bark2,2*s);
+    foliageCluster(x,y-54*s,31*s,38*s,['#17442a','#2a6437','#4e8448','#71985a'],181);
+    foliageCluster(x-20*s,y-42*s,18*s,21*s,['#255b34','#4d8248','#789a5d'],187);
+    foliageCluster(x+21*s,y-42*s,18*s,21*s,['#255b34','#4d8248','#789a5d'],193);
+    for(let i=0;i<8;i++){px(x-25*s+rnd(i,31)*50*s,y-69*s+rnd(i,37)*27*s,3*s,8*s,'#eee7d2');px(x-22*s+rnd(i,33)*44*s,y-74*s+rnd(i,39)*25*s,3*s,5*s,'#fff8e7')}
+  }else if(name==='จามจุรี'){
+    branch(x,y-8*s,-68*s,-29*s,C.bark2,4*s);branch(x,y-8*s,69*s,-29*s,C.bark2,4*s);
+    branch(x-20*s,y-22*s,-48*s,-2*s,C.bark2,3*s);branch(x+20*s,y-22*s,48*s,-2*s,C.bark2,3*s);
+    foliageCluster(x,y-49*s,69*s,30*s,['#103823','#194d2c','#2b6337','#4a8046','#679451'],211);
+    foliageCluster(x-49*s,y-34*s,33*s,17*s,['#17462a','#2c6538','#56864b'],223);
+    foliageCluster(x+49*s,y-34*s,33*s,17*s,['#17462a','#2c6538','#56864b'],227);
+    for(let i=0;i<18;i++)leaf(x-60*s+rnd(i,41)*120*s,y-62*s+rnd(i,43)*28*s,i%3?'#3f7743':'#709857',4*s,3*s);
+  }else if(name==='มะขาม'){
+    branch(x,y-7*s,-40*s,-29*s,C.bark2,3*s);branch(x,y-7*s,40*s,-29*s,C.bark2,3*s);
+    foliageCluster(x,y-45*s,45*s,28*s,['#17442a','#285e35','#4a7e45','#719255'],239);
+    for(let i=0;i<24;i++)leaf(x-37*s+rnd(i,51)*74*s,y-64*s+rnd(i,53)*31*s,i%2?'#557f47':'#759354',3*s,2*s);
+    for(let i=0;i<5;i++)px(x-28*s+i*14*s,y-20*s+rnd(i,58)*8*s,8*s,2*s,'#6f4c31');
+  }else if(name==='หว้า'){
+    branch(x,y-8*s,-35*s,-31*s,C.bark2,3*s);branch(x,y-8*s,36*s,-31*s,C.bark2,3*s);
+    foliageCluster(x,y-48*s,43*s,34*s,['#123c28','#1c522f','#2f6b3a','#4e8348'],251);
+    foliageCluster(x-29*s,y-31*s,24*s,20*s,['#194a2c','#39743f','#5a8d50'],257);
+    foliageCluster(x+29*s,y-31*s,24*s,20*s,['#194a2c','#39743f','#5a8d50'],263);
+    for(let i=0;i<7;i++)px(x-31*s+rnd(i,67)*62*s,y-31*s+rnd(i,71)*27*s,4*s,4*s,'#5e2c55');
+  }else if(name==='สะเดา'){
+    branch(x,y-8*s,-36*s,-28*s,C.bark2,3*s);branch(x,y-8*s,37*s,-28*s,C.bark2,3*s);
+    foliageCluster(x,y-47*s,39*s,27*s,['#174229','#285f34','#477c42','#6b914e'],271);
+    for(let i=0;i<20;i++)leaf(x-34*s+rnd(i,73)*68*s,y-60*s+rnd(i,79)*29*s,i%2?'#568247':'#789858',4*s,3*s);
+  }else if(name==='กันเกรา'){
+    branch(x,y-7*s,-31*s,-31*s,C.bark2,3*s);branch(x,y-7*s,31*s,-31*s,C.bark2,3*s);
+    foliageCluster(x,y-50*s,40*s,34*s,['#17442a','#2b6337','#4e8249','#73995a'],281);
+    for(let i=0;i<8;i++)px(x-28*s+rnd(i,83)*56*s,y-68*s+rnd(i,89)*31*s,4*s,4*s,'#f2e3b1');
+  }else if(name==='มะค่าแต้'){
+    branch(x,y-8*s,-43*s,-27*s,C.bark2,4*s);branch(x,y-8*s,43*s,-27*s,C.bark2,4*s);
+    foliageCluster(x,y-43*s,51*s,26*s,['#153e28','#245b34','#487b43','#668e50'],293);
+    foliageCluster(x-36*s,y-29*s,27*s,16*s,['#1e5130','#477c44','#6e9557'],299);
+    foliageCluster(x+36*s,y-29*s,27*s,16*s,['#1e5130','#477c44','#6e9557'],307);
+  }else if(name==='ยมหิน'){
+    branch(x,y-8*s,-32*s,-35*s,C.bark2,3*s);branch(x,y-8*s,33*s,-35*s,C.bark2,3*s);
+    foliageCluster(x,y-52*s,39*s,35*s,['#16432a','#2b6538','#4f8449','#759a5b'],313);
+    for(let i=0;i<13;i++)leaf(x-30*s+rnd(i,97)*60*s,y-70*s+rnd(i,101)*35*s,i%3?'#4c8146':'#719657',6*s,4*s);
+  }else if(name==='มะหาด'){
+    branch(x,y-8*s,-40*s,-27*s,C.bark2,3*s);branch(x,y-8*s,41*s,-27*s,C.bark2,3*s);
+    foliageCluster(x,y-46*s,49*s,31*s,['#123b27','#1e552f','#39723e','#629151'],327);
+    foliageCluster(x-33*s,y-30*s,27*s,18*s,['#1b4d2d','#477d44','#719653'],331);
+    foliageCluster(x+33*s,y-30*s,27*s,18*s,['#1b4d2d','#477d44','#719653'],337);
+    if(rnd(x,y)>.3)for(let i=0;i<4;i++)px(x-24*s+i*16*s,y-26*s+rnd(i,103)*9*s,5*s,5*s,'#b48a49');
+  }else if(name==='มะเกลือ'){
+    branch(x,y-8*s,-34*s,-30*s,C.bark2,3*s);branch(x,y-8*s,35*s,-30*s,C.bark2,3*s);
+    foliageCluster(x,y-46*s,40*s,29*s,['#143d28','#245b33','#3f7540','#608b4e'],347);
+    for(let i=0;i<14;i++)leaf(x-31*s+rnd(i,107)*62*s,y-62*s+rnd(i,109)*29*s,i%3?'#4d7d45':'#6d9055',5*s,4*s);
+    for(let i=0;i<3;i++)px(x-17*s+i*15*s,y-20*s+rnd(i,113)*8*s,6*s,6*s,'#4c2730');
+  }else{
+    canopyBase(t,s,40,28,['#163e28','#285f35','#4a8147','#70985a']);
   }
 }
 
-function speciesTrunk(t){
-  const i=t.type;
-  if(i===10){drawTrunkProfile(t,[1.25,1,1]);return} // ตะเคียนทอง: ลำต้นใหญ่ เด่น
-  if(i===15||i===20){drawTrunkProfile(t,[1.35,1,1]);return} // จามจุรี/มะค่าแต้: ฐานแผ่
-  if(i===13){drawTrunkProfile(t,[.9,0,1]);return} // ราชพฤกษ์: ลำต้นเพรียว
-  drawTrunkProfile(t,[1,1,1]);
-}
-
-trees.forEach(t=>{
-  t.type=Math.floor(rnd(t.x+37,t.y+71)*thaiSpecies.length);
-  t.info=thaiSpecies[t.type];
-  t.visualType=t.type;
-});
-
-treeBase=function(t){speciesTrunk(t)};
-treeCanopy=function(t){speciesCanopy(t)};
-
-window.moonwoodTreeVisuals={
-  version:2,
-  speciesCount:thaiSpecies.length,
-  note:'Thai species-specific pixel silhouettes'
-};
+// Replace the original low-detail global renderer with the species renderer.
+treeBase=detailedTreeBase;
+treeCanopy=detailedTreeCanopy;
