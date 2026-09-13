@@ -4,54 +4,55 @@
   let holding = false;
   let started = 0;
   let open = false;
-  let mirror = { x: 1800, y: 1160 };
-  let originalMove = null;
-  let initializedMove = false;
 
   const ui = document.getElementById('ui');
   if (!ui) return;
 
-  const oldPrompt = () => document.querySelector('.treePrompt');
   const prompt = document.getElementById('holdTreePrompt') || document.createElement('div');
   prompt.id = 'holdTreePrompt';
-  prompt.hidden = true;
   if (!prompt.parentNode) ui.appendChild(prompt);
 
   const progressBox = document.getElementById('treeSearchProgress') || document.createElement('div');
   progressBox.id = 'treeSearchProgress';
-  progressBox.hidden = true;
-  progressBox.innerHTML = '<div class="searchLabel"><span>กำลังค้นหาต้นไม้</span><b>0%</b></div><div class="searchTrack"><i></i></div>';
   if (!progressBox.parentNode) ui.appendChild(progressBox);
+  progressBox.innerHTML = '<div class="searchLabel"><span>กำลังค้นหาต้นไม้</span><b>0%</b></div><div class="searchTrack"><i></i></div>';
 
-  function hideOldPrompt() {
-    const el = oldPrompt();
-    if (el) { el.hidden = true; el.style.display = 'none'; }
+  function state() {
+    return typeof window.moonwoodState === 'function' ? window.moonwoodState() : null;
   }
 
-  function treeFromGame() {
+  function currentTree() {
     return typeof window.closestTree === 'function' ? window.closestTree() : null;
   }
 
-  function distanceToTree(t) {
-    if (!t) return Infinity;
-    const s = typeof window.treeScale === 'function' ? window.treeScale(t) : 1.5;
-    return Math.hypot(mirror.x - t.x, mirror.y - (t.y + 42 * s));
+  function distanceTo(t, s) {
+    if (!t || !s) return Infinity;
+    const scale = typeof window.treeScale === 'function' ? window.treeScale(t) : 1.5;
+    return Math.hypot(s.x - t.x, s.y - (t.y + 42 * scale));
   }
 
-  function isClose(t) { return !!t && distanceToTree(t) <= CLOSE_DIST; }
+  function isClose(t) {
+    return distanceTo(t, state()) <= CLOSE_DIST;
+  }
 
-  function updatePrompt() {
-    hideOldPrompt();
-    const t = treeFromGame();
-    const close = isClose(t);
-    prompt.hidden = open || holding || !close;
-    if (close && t && !open && !holding) {
-      prompt.innerHTML = `<span class="holdTreeName">${t.info?.[0] || '???'}</span><small>E &nbsp; กดค้างเพื่อค้นหา</small>`;
+  function hideLegacy() {
+    document.querySelectorAll('.treePrompt').forEach(el => {
+      el.hidden = true;
+      el.style.display = 'none';
+    });
+  }
+
+  function promptFor(t) {
+    hideLegacy();
+    const visible = !open && !holding && isClose(t);
+    prompt.hidden = !visible;
+    if (visible) {
+      prompt.innerHTML = `<span class="holdTreeName">${t?.info?.[0] || '???'}</span><small>E &nbsp; กดค้างเพื่อค้นหา</small>`;
     }
   }
 
-  function setProgress(value) {
-    const pct = Math.max(0, Math.min(100, value));
+  function setProgress(v) {
+    const pct = Math.max(0, Math.min(100, v));
     const label = progressBox.querySelector('.searchLabel b');
     const bar = progressBox.querySelector('.searchTrack i');
     if (label) label.textContent = `${Math.round(pct)}%`;
@@ -59,48 +60,57 @@
     progressBox.hidden = !holding;
   }
 
-  function startSearch() {
-    const t = treeFromGame();
-    if (!isClose(t) || open) return;
-    holding = true;
-    started = performance.now();
-    setProgress(0);
-    prompt.hidden = true;
-  }
-
-  function cancelSearch() {
+  function clearSearch() {
     holding = false;
     started = 0;
     setProgress(0);
     progressBox.hidden = true;
-    updatePrompt();
+  }
+
+  function startSearch() {
+    const t = currentTree();
+    if (open || !isClose(t)) return;
+    holding = true;
+    started = performance.now();
+    prompt.hidden = true;
+    setProgress(0);
   }
 
   function finishSearch() {
-    const t = treeFromGame();
-    if (!isClose(t)) { cancelSearch(); return; }
-    holding = false;
-    progressBox.hidden = true;
+    const t = currentTree();
+    if (!isClose(t)) {
+      clearSearch();
+      promptFor(t);
+      return;
+    }
+    clearSearch();
     open = true;
     prompt.hidden = true;
     const box = document.getElementById('treeInfo');
-    if (box && t.info) {
-      box.innerHTML = `<h3>${t.info[0]}</h3><p class="latin">${t.info[1]} · <i>${t.info[2]}</i></p><p><b>ประเภท:</b> ${t.info[3]}</p><p class="fact">${t.info[4]}</p><div class="close">E &nbsp; ปิดข้อมูล</div>`;
-      box.hidden = false;
+    if (!box || !t.info) {
+      open = false;
+      promptFor(t);
+      return;
     }
+    box.innerHTML = `<h3>${t.info[0]}</h3><p class="latin">${t.info[1]} · <i>${t.info[2]}</i></p><p><b>ประเภท:</b> ${t.info[3]}</p><p class="fact">${t.info[4]}</p><div class="close">E &nbsp; ปิดข้อมูล</div>`;
+    box.hidden = false;
   }
 
   function tick(now) {
-    hideOldPrompt();
-    const t = treeFromGame();
+    hideLegacy();
+    const t = currentTree();
     if (holding) {
-      if (!isClose(t)) cancelSearch();
-      else {
+      if (!isClose(t)) {
+        clearSearch();
+        promptFor(t);
+      } else {
         const pct = ((now - started) / HOLD_MS) * 100;
         setProgress(pct);
         if (pct >= 100) finishSearch();
       }
-    } else updatePrompt();
+    } else if (!open) {
+      promptFor(t);
+    }
     requestAnimationFrame(tick);
   }
 
@@ -113,7 +123,7 @@
       open = false;
       const box = document.getElementById('treeInfo');
       if (box) box.hidden = true;
-      updatePrompt();
+      promptFor(currentTree());
       return;
     }
     startSearch();
@@ -123,25 +133,18 @@
     if (ev.key.toLowerCase() !== 'e') return;
     ev.preventDefault();
     ev.stopImmediatePropagation();
-    if (holding) cancelSearch();
+    if (holding) {
+      clearSearch();
+      promptFor(currentTree());
+    }
   }, true);
 
-  addEventListener('blur', () => { if (holding) cancelSearch(); });
-
-  const waitForGame = setInterval(() => {
-    if (typeof window.move === 'function' && !initializedMove) {
-      originalMove = window.move;
-      window.move = function(dx, dy) {
-        const beforeX = mirror.x, beforeY = mirror.y;
-        originalMove(dx, dy);
-        mirror.x = beforeX + dx;
-        mirror.y = beforeY + dy;
-      };
-      initializedMove = true;
-      clearInterval(waitForGame);
+  addEventListener('blur', () => {
+    if (holding) {
+      clearSearch();
+      promptFor(currentTree());
     }
-  }, 20);
+  });
 
-  setInterval(hideOldPrompt, 50);
   requestAnimationFrame(tick);
 })();
