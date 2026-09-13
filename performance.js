@@ -16,7 +16,7 @@ if(oldGrass)grassland=function(){
  R(0,1415,W,15,'#397044');R(0,1430,W,260,'#24566d');R(0,1430,W,6,'#8cc7c7');
  const wx0=Math.max(0,Math.floor((q.x-20)/55)*55),wx1=Math.min(W,q.x+c.width+55);for(let x=wx0;x<wx1;x+=55){const n=rnd(x,4);R(x,1460+n*25,22,3,'#73acb5');R(x+28,1540+n*20,16,3,'#477f96')}
  R(0,1690,W,20,'#397044');path(0,1035,1480,72);path(2120,1035,1480,72);path(1760,0,72,820);path(1760,1170,72,1030);path(600,470,1080,58);path(2780,470,700,58);
- R(1380,840,840,245);for(let y=850;y<1080;y+=26)for(let x=1390;x<2210;x+=34){if(!visible(x,y,40))continue;const n=rnd(x,y);R(x,y,27,19,n>.5?'#79746b':'#514e4a');R(x+4,y+3,18,3,'#969087')}
+ R(1380,840,840,245,'#5f5a54');for(let y=850;y<1080;y+=26)for(let x=1390;x<2210;x+=34){if(!visible(x,y,40))continue;const n=rnd(x,y);R(x,y,27,19,n>.5?'#79746b':'#514e4a');R(x+4,y+3,18,3,'#969087')}
 };
 window.moonwoodPerformance={treeCulling:true,activeCamera:true,visibleGroundTiles:true};
 })();
