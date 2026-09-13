@@ -1,13 +1,14 @@
 (() => {
   'use strict';
 
-  const HOLD_MS = 900;
-  const INTERACT_RADIUS = 54;
+  const HOLD_MS = 850;
+  const INTERACT_RADIUS = 58;
   const ui = document.getElementById('ui');
   const info = document.getElementById('treeInfo');
   if (!ui || !info) return;
 
   let mode = 'idle';
+  let eDown = false;
   let startedAt = 0;
   let lockedTree = null;
 
@@ -48,13 +49,12 @@
   }
 
   function canInteract(t) {
-    const s = state();
-    return !!t && !!s && distanceToTree(t, s) <= INTERACT_RADIUS;
+    return !!t && !!state() && distanceToTree(t, state()) <= INTERACT_RADIUS;
   }
 
   function setPrompt(t) {
     hideLegacy();
-    const visible = mode === 'idle' && !state()?.treeOpen && canInteract(t);
+    const visible = mode === 'idle' && !info.open && canInteract(t);
     prompt.hidden = !visible;
     if (visible) {
       const name = t?.info?.[0] || '???';
@@ -62,49 +62,53 @@
     }
   }
 
-  function setProgress(value) {
+  function setProgress(value, visible = true) {
     const pct = Math.max(0, Math.min(100, value));
     const label = progress.querySelector('.searchLabel b');
     const bar = progress.querySelector('.searchTrack i');
     if (label) label.textContent = `${Math.round(pct)}%`;
     if (bar) bar.style.width = `${pct}%`;
-    progress.hidden = mode !== 'holding';
+    progress.hidden = !visible;
   }
 
-  function stopHold() {
+  function cancelHold() {
     mode = 'idle';
     startedAt = 0;
     lockedTree = null;
-    setProgress(0);
+    setProgress(0, false);
   }
 
   function openInfo(t) {
-    if (!canInteract(t) || !t?.info) return;
+    if (!canInteract(t) || !t?.info) return false;
     const s = t.info;
-    info.innerHTML = `<h3>${s[0]}</h3><p class="latin">${s[1]} · <i>${s[2]}</i></p><p><b>ประเภท:</b> ${s[3]}</p><p class="fact">${s[4]}</p><div class="close">E &nbsp; ปิดข้อมูล</div>`;
+    info.innerHTML = `<h3>${s[0]}</h3><p class="latin">${s[1]} · <i>${s[2]}</i></p><p><b>ประเภท:</b> ${s[3]}</p><p class="fact">${s[4]}</p><div class="close">E &nbsp; กด E เพื่อปิด</div>`;
     info.hidden = false;
+    info.open = true;
     mode = 'open';
     prompt.hidden = true;
-    progress.hidden = true;
-  }
-
-  function beginHold() {
-    const t = currentTree();
-    if (mode !== 'idle' || !canInteract(t)) return;
-    mode = 'holding';
-    lockedTree = t;
-    startedAt = performance.now();
-    prompt.hidden = true;
-    setProgress(0);
+    setProgress(100, false);
+    return true;
   }
 
   function closeInfo() {
     info.hidden = true;
+    info.open = false;
     mode = 'idle';
     startedAt = 0;
     lockedTree = null;
-    setProgress(0);
+    setProgress(0, false);
     setPrompt(currentTree());
+  }
+
+  function beginHold() {
+    if (mode !== 'idle') return;
+    const t = currentTree();
+    if (!canInteract(t)) return;
+    mode = 'holding';
+    lockedTree = t;
+    startedAt = performance.now();
+    prompt.hidden = true;
+    setProgress(0, true);
   }
 
   function tick(now) {
@@ -112,26 +116,23 @@
     const t = currentTree();
 
     if (mode === 'holding') {
-      if (t !== lockedTree || !canInteract(lockedTree)) {
-        stopHold();
+      if (!eDown || t !== lockedTree || !canInteract(lockedTree)) {
+        cancelHold();
         setPrompt(t);
       } else {
         const pct = ((now - startedAt) / HOLD_MS) * 100;
-        setProgress(pct);
+        setProgress(pct, true);
         if (pct >= 100) {
-          mode = 'open';
-          lockedTree = null;
-          startedAt = 0;
-          setProgress(100);
-          openInfo(t);
+          cancelHold();
+          openInfo(lockedTree);
         }
       }
     } else if (mode === 'idle') {
       setPrompt(t);
-      progress.hidden = true;
+      setProgress(0, false);
     } else {
       prompt.hidden = true;
-      progress.hidden = true;
+      setProgress(0, false);
     }
 
     requestAnimationFrame(tick);
@@ -140,8 +141,8 @@
   addEventListener('keydown', ev => {
     if (ev.key.toLowerCase() !== 'e') return;
     ev.preventDefault();
-    ev.stopImmediatePropagation();
     if (ev.repeat) return;
+    eDown = true;
     if (mode === 'open') closeInfo();
     else beginHold();
   }, true);
@@ -149,19 +150,21 @@
   addEventListener('keyup', ev => {
     if (ev.key.toLowerCase() !== 'e') return;
     ev.preventDefault();
-    ev.stopImmediatePropagation();
+    eDown = false;
     if (mode === 'holding') {
-      stopHold();
+      cancelHold();
       setPrompt(currentTree());
     }
   }, true);
 
   addEventListener('blur', () => {
-    if (mode === 'holding') stopHold();
+    eDown = false;
+    if (mode === 'holding') cancelHold();
     if (mode === 'idle') setPrompt(currentTree());
   });
 
   info.hidden = true;
+  info.open = false;
   prompt.hidden = true;
   progress.hidden = true;
   requestAnimationFrame(tick);
