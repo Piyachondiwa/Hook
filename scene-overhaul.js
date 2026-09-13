@@ -26,7 +26,7 @@ function island(){
  for(const xx of [1950,2150,2350]){lantern(xx,1075);B(xx-1,1072,2,3,C.sakura2)}for(let i=0;i<30;i++){const xx=2260+(i*97)%1100,yy=900+(i*61)%470;B(xx,yy,3+(i%2),3,i%3?C.sakura:C.sakura2)}
 }
 function cameraGrade(){g.translate(c.width/2,c.height/2+10);g.scale(1,.86);g.translate(-c.width/2,-c.height/2-10)}
-world=function(){g.save();cameraGrade();oldWorld();island();g.restore()};
+world=function(){g.save();cameraGrade();oldWorld();island();if(typeof hero==='function')hero();if(typeof arrow==='function')arrow();g.restore()};
 if(oldBlocked){blocked=function(x,y){if(oldBlocked(x,y)){if(x>=1820&&x<=2535&&y>=1070&&y<=1195)return false;return true}return false}}
 window.moonwoodScene={camera:'elevated-3/4',japaneseIsland:true,bridge:true,riceFields:true,torii:true,sakura:true};
 })();
