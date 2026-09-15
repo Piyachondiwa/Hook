@@ -18,63 +18,23 @@ if(oldGrass)grassland=function(){
  R(0,1690,W,20,'#397044');path(0,1035,1480,72);path(2120,1035,1480,72);path(1760,0,72,820);path(1760,1170,72,1030);path(600,470,1080,58);path(2780,470,700,58);
  R(1380,840,840,245,'#5f5a54');for(let y=850;y<1080;y+=26)for(let x=1390;x<2210;x+=34){if(!visible(x,y,40))continue;const n=rnd(x,y);R(x,y,27,19,n>.5?'#79746b':'#514e4a');R(x+4,y+3,18,3,'#969087')}
 };
-
-/* ---------------------------------------------------------------
-   NATURAL WORLD LAYOUT
-   Rebuilds placement deterministically after Thai species are loaded.
-   Forest belts frame the playable clearings, wetland species stay near
-   water, paths remain readable, and structures get breathing room.
----------------------------------------------------------------- */
 if(typeof trees!=='undefined'&&typeof rocks!=='undefined'&&typeof flowers!=='undefined'&&typeof grass!=='undefined'&&typeof rnd==='function'){
- const MW=3600,MH=2200;
- const hash=(x,y)=>rnd(x*1.731+y*7.193,x*3.17-y*1.91);
+ const MW=3600,MH=2200,hash=(x,y)=>rnd(x*1.731+y*7.193,x*3.17-y*1.91);
  function forbidden(x,y,pad=0){
-  if(x<70+pad||x>MW-70-pad||y<70+pad||y>MH-70-pad)return true;
-  if(y>1410-pad&&y<1710+pad)return true;
-  if(y>1005-pad&&y<1115+pad)return true;
-  if(x>1710-pad&&x<1835+pad)return true;
-  if(x>580-pad&&x<1690+pad&&y>445-pad&&y<545+pad)return true;
-  if(x>2750-pad&&x<3520+pad&&y>445-pad&&y<545+pad)return true;
-  if(x>1360-pad&&x<2240+pad&&y>815-pad&&y<1110+pad)return true;
-  const structures=[[820,694,210,126],[2450,634,210,126],[340,455,150,108]];
-  for(const q of structures)if(x>=q[0]-pad&&x<=q[0]+q[2]+pad&&y>=q[1]-pad&&y<=q[1]+q[3]+pad)return true;
-  const cliffs=[[2450,170,720,360],[2820,1780,560,260],[520,1750,600,250],[700,1780,380,160]];
-  for(const q of cliffs)if(x>=q[0]-pad&&x<=q[0]+q[2]+pad&&y>=q[1]-pad&&y<=q[1]+q[3]+pad)return true;
-  return false;
+  if(x<70+pad||x>MW-70-pad||y<70+pad||y>MH-70-pad)return true;if(y>1410-pad&&y<1710+pad)return true;if(y>1005-pad&&y<1115+pad)return true;if(x>1710-pad&&x<1835+pad)return true;
+  if(x>580-pad&&x<1690+pad&&y>445-pad&&y<545+pad)return true;if(x>2750-pad&&x<3520+pad&&y>445-pad&&y<545+pad)return true;if(x>1360-pad&&x<2240+pad&&y>815-pad&&y<1110+pad)return true;
+  const structures=[[820,694,210,126],[2450,634,210,126],[340,455,150,108]],cliffs=[[2450,170,720,360],[2820,1780,560,260],[520,1750,600,250],[700,1780,380,160]];
+  for(const q of structures)if(x>=q[0]-pad&&x<=q[0]+q[2]+pad&&y>=q[1]-pad&&y<=q[1]+q[3]+pad)return true;for(const q of cliffs)if(x>=q[0]-pad&&x<=q[0]+q[2]+pad&&y>=q[1]-pad&&y<=q[1]+q[3]+pad)return true;return false;
  }
  const wet=(x,y)=>(y>1240&&y<1405)||(y>1695&&y<1775)||(x<260&&y>600&&y<1320);
- const biomeScore=(x,y)=>{
-  let s=.52;if(x<620||x>2980)s+=.24;if(y<380||y>1880)s+=.18;if((x<900&&y>1150)||(x>2700&&y>1150))s+=.16;if(x>1150&&x<2450&&y>650&&y<1320)s-=.30;if(y>1380&&y<1740)s-=.45;return s;
- };
- const candidates=[];
- for(let gy=100;gy<MH-100;gy+=72)for(let gx=100;gx<MW-100;gx+=72){
-  const x=gx+(hash(gx,gy)-.5)*54,y=gy+(hash(gx+41,gy-17)-.5)*54;
-  if(forbidden(x,y,58)||candidates.some(q=>Math.hypot(q.x-x,q.y-y)<118)||hash(x,y)>=biomeScore(x,y))continue;
-  candidates.push({x,y});
- }
- candidates.sort((a,b)=>biomeScore(b.x,b.y)-biomeScore(a.x,a.y)||hash(b.x,b.y)-hash(a.x,a.y));
- const picked=candidates.slice(0,165);
- while(trees.length<picked.length)trees.push({x:0,y:0,v:.82,type:0,info:null});
- while(trees.length>picked.length)trees.pop();
- const chooseSpecies=(x,y,i)=>{
-  const r=hash(x+i*11,y-i*7);
-  if(wet(x,y)){const a=[1,10,12,17,19,22];return a[Math.floor(r*a.length)]}
-  if(y<650){const a=[0,2,3,4,5,6,7,8,9,14,20];return a[Math.floor(r*a.length)]}
-  if(x<850||x>2750){const a=[0,2,3,4,5,6,8,9,10,15,16,18,20,23];return a[Math.floor(r*a.length)]}
-  const a=[0,1,3,6,9,10,11,15,16,18,19,21,22,23];return a[Math.floor(r*a.length)];
- };
+ const score=(x,y)=>{let s=.52;if(x<620||x>2980)s+=.24;if(y<380||y>1880)s+=.18;if((x<900&&y>1150)||(x>2700&&y>1150))s+=.16;if(x>1150&&x<2450&&y>650&&y<1320)s-=.30;if(y>1380&&y<1740)s-=.45;return s};
+ const candidates=[];for(let gy=100;gy<MH-100;gy+=72)for(let gx=100;gx<MW-100;gx+=72){const x=gx+(hash(gx,gy)-.5)*54,y=gy+(hash(gx+41,gy-17)-.5)*54;if(forbidden(x,y,58)||candidates.some(q=>Math.hypot(q.x-x,q.y-y)<118)||hash(x,y)>=score(x,y))continue;candidates.push({x,y})}
+ candidates.sort((a,b)=>score(b.x,b.y)-score(a.x,a.y)||hash(b.x,b.y)-hash(a.x,a.y));const picked=candidates.slice(0,165);while(trees.length<picked.length)trees.push({x:0,y:0,v:.82,type:0,info:null});while(trees.length>picked.length)trees.pop();
+ const chooseSpecies=(x,y,i)=>{const r=hash(x+i*11,y-i*7);if(wet(x,y)){const a=[1,10,12,17,19,22];return a[Math.floor(r*a.length)]}if(y<650){const a=[0,2,3,4,5,6,7,8,9,14,20];return a[Math.floor(r*a.length)]}if(x<850||x>2750){const a=[0,2,3,4,5,6,8,9,10,15,16,18,20,23];return a[Math.floor(r*a.length)]}const a=[0,1,3,6,9,10,11,15,16,18,19,21,22,23];return a[Math.floor(r*a.length)]};
  for(let i=0;i<picked.length;i++){const q=picked[i],t=trees[i];t.x=q.x;t.y=q.y;t.v=.79+hash(q.x,q.y)*.17;if(typeof thaiSpecies!=='undefined'){t.type=chooseSpecies(t.x,t.y,i)%thaiSpecies.length;t.visualType=t.type;t.info=thaiSpecies[t.type]}}
- const rockSpots=[];
- for(let i=0;i<115;i++)for(let a=0;a<30;a++){
-  const x=90+hash(i*31+a,17)*3420,y=90+hash(i*47+a,29)*2010,edge=(x<500||x>3100||y<450||y>1840)?1:.35;
-  if(forbidden(x,y,35)||hash(i+a,55)>edge||rockSpots.some(q=>Math.hypot(q.x-x,q.y-y)<42))continue;
-  rockSpots.push({x,y,s:4+hash(i,88)*9});break;
- }
- rocks.splice(0,rocks.length,...rockSpots);
- const flowerSpots=[];
- for(let i=0;i<470;i++){const x=35+hash(i,201)*3530,y=35+hash(i,301)*1350;if(forbidden(x,y,18))continue;if(hash(i,411)>.82&&biomeScore(x,y)<.45)continue;flowerSpots.push({x,y,t:i%8})}
- flowers.splice(0,flowers.length,...flowerSpots);
- for(let i=0;i<grass.length;i++)if(grass[i].y>1400&&grass[i].y<1710){grass[i].x=0;grass[i].y=0}else if(forbidden(grass[i].x,grass[i].y,4)&&hash(i,515)>.18){grass[i].x=0;grass[i].y=0}
+ const rs=[];for(let i=0;i<115;i++)for(let a=0;a<30;a++){const x=90+hash(i*31+a,17)*3420,y=90+hash(i*47+a,29)*2010;if(forbidden(x,y,35)||hash(i+a,55)>(x<500||x>3100||y<450||y>1840?1:.35)||rs.some(q=>Math.hypot(q.x-x,q.y-y)<42))continue;rs.push({x,y,s:4+hash(i,88)*9});break}rocks.splice(0,rocks.length,...rs);
+ const fs=[];for(let i=0;i<470;i++){const x=35+hash(i,201)*3530,y=35+hash(i,301)*1350;if(forbidden(x,y,18)||hash(i,411)>.82&&score(x,y)<.45)continue;fs.push({x,y,t:i%8})}flowers.splice(0,flowers.length,...fs);
+ for(let i=0;i<grass.length;i++)if((grass[i].y>1400&&grass[i].y<1710)||(forbidden(grass[i].x,grass[i].y,4)&&hash(i,515)>.18)){grass[i].x=0;grass[i].y=0}
  window.moonwoodLayout={naturalized:true,thaiTreeCount:trees.length,rockCount:rocks.length,flowerCount:flowers.length,mainMap:{width:MW,height:MH,openCenter:true,forestBelts:true,wetlandBuffer:true}};
 }
 window.moonwoodPerformance={treeCulling:true,activeCamera:true,naturalLayout:true,noSceneOverride:true};
