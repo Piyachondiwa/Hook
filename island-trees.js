@@ -5,7 +5,7 @@ const baseWorld=world;
 const trees=[
 {x:3715,y:760,t:'pine',s:1.10},{x:3870,y:735,t:'broad',s:.92},{x:4040,y:705,t:'pine',s:1.0},{x:4470,y:710,t:'maple',s:1.02},{x:4790,y:735,t:'pine',s:1.08},{x:4990,y:760,t:'broad',s:.9},
 {x:3690,y:875,t:'broad',s:.95},{x:3720,y:970,t:'pine',s:.82},{x:3750,y:1450,t:'broad',s:.95},{x:3830,y:1570,t:'pine',s:1.08},{x:3980,y:1640,t:'maple',s:1.0},{x:4200,y:1670,t:'broad',s:.9},{x:4440,y:1650,t:'pine',s:1.06},{x:4680,y:1655,t:'maple',s:1.02},{x:4930,y:1600,t:'broad',s:.94},{x:5030,y:1450,t:'pine',s:.88},
-{x:3700,y:1160,t:'broad',s:.8},{x:3790,y:1340,t:'pine',s:.85},{x:4030,y:1080,t:'maple',s:.72},{x:4580,y:1070,t:'broad',s:.76},{x:5010,y:1090,t:'pine',s:.82},{x:4090,y:1480,t:'pine',s:.72},{x:4550,y:1480,t:'maple',s:.72},{x:4880,y:1320,t:'broad',s:.78},
+{x:3790,y:1340,t:'pine',s:.85},{x:4030,y:1080,t:'maple',s:.72},{x:4580,y:1070,t:'broad',s:.76},{x:5010,y:1090,t:'pine',s:.82},{x:4090,y:1480,t:'pine',s:.72},{x:4550,y:1480,t:'maple',s:.72},{x:4880,y:1320,t:'broad',s:.78},
 {x:3890,y:790,t:'pine',s:.7},{x:4670,y:790,t:'broad',s:.72},{x:4320,y:690,t:'maple',s:.76},{x:4870,y:690,t:'pine',s:.7}
 ];
 const D={deep:'#173827',leaf:'#285b3a',mid:'#41794a',light:'#709b59',lime:'#9faf68',trunk:'#4e3525',trunkHi:'#8a5b39',stone:'#70746c',stoneHi:'#bdb9a9',grass:'#8fa361',grass2:'#617e4b',pink:'#e5a6b9',pink2:'#f3cbd6',gold:'#e2ad5d',wood:'#6a432c',water:'#4e8990'};
