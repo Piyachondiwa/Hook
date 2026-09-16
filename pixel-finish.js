@@ -1,0 +1,6 @@
+/* Moonwood: final deterministic pixel-detail pass. Decorative only, never owns collision. */
+(()=>{'use strict';if(typeof world!=='function'||typeof R!=='function')return;const prev=world;const h=(x,y)=>{const n=Math.sin(x*12.9898+y*78.233+7319)*43758.5453;return n-Math.floor(n)};const box=(x,y,w,h)=>x>=0&&x<=w&&y>=0&&y<=h;function detail(){for(let i=0;i<720;i++){const x=40+(i*83)%3150,y=90+(i*137)%2050,n=h(i,17);if(y>1045&&y<1200)continue;if(x>1280&&x<2280&&y>1240&&y<1400)continue;if(n<.45){R(x,y,2,2,'#718f52');if(n<.16)R(x+2,y-2,2,3,'#86a15a')}else if(n<.78)R(x,y,3,2,'#849a59');else R(x,y,2,3,'#a0aa66')}
+for(let i=0;i<430;i++){const x=3710+(i*47)%1370,y=675+(i*73)%1030,n=h(i,41);if((y>1040&&y<1190)||(y>1210&&y<1415)||(x>3730&&x<5000&&y>835&&y<1045))continue;if(n<.36)R(x,y,3,2,'#647e4d');else if(n<.72){R(x,y,2,6,'#819a55');R(x+3,y-2,2,4,'#9aaa60')}else if(n<.9)R(x,y,4,2,'#b0b36d');else R(x,y,3,3,'#d6b27a')}
+/* quiet road-edge pixels keep the path integrated with the terrain. */
+for(let x=1020;x<3690;x+=29){const n=h(x,55);if(n>.32){R(x,1057,3,2,'#6c8b50');R(x+7,1181,3,2,'#6c8b50')}}}
+world=function(){prev();detail();window.moonwoodPixelFinish={active:true,deterministic:true,groundDetails:1150,decorativeOnly:true};};})();
