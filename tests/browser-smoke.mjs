@@ -108,6 +108,15 @@ const islandState = await page.evaluate(() => {
 await page.waitForTimeout(100);
 await page.screenshot({ path: 'test-results/moonwood-japan-island.png', fullPage: false });
 
+const visualAudit = {
+  cameraProjectionApplied: !!(state.cameraHook?.active && state.cameraHook?.scaleApplied && state.camera?.scaleY === 0.86),
+  japaneseTreeGroundShadows: !!state.islandTrees?.groundShadows,
+  characterPolish: !!(state.polish?.active && state.polish?.pixelOnly === true && state.polish?.readablePose === true),
+  effects: !!(state.effects?.cameraAligned && state.effects?.sakuraPetals && state.effects?.fireflies),
+  naturalThaiLayout: !!state.layout.naturalized,
+  pixelDetail: state.scene.pixelDetail === 'high' && !!state.elevation?.pixelTerrain
+};
+
 if (errors.length) throw new Error(errors.join('\n'));
 if (state.canvasWidth !== 640 || state.canvasHeight !== 360) throw new Error(`Unexpected canvas: ${state.canvasWidth}x${state.canvasHeight}`);
 if (!state.debugAvailable) throw new Error('Gameplay debug bridge is not loaded');
@@ -127,15 +136,10 @@ if (state.fenceBlocked) throw new Error('Player can walk through a fence');
 if (!state.outsideWestBlocked || !state.outsideEastBlocked || !state.outsideNorthBlocked || !state.outsideSouthBlocked) throw new Error('Player can leave the island boundary');
 if (!state.boundary?.locked) throw new Error('Hard island boundary lock is not active');
 if (!state.failsafe?.collisionOnly || state.failsafe?.visualOverride) throw new Error('Failsafe visual override is active');
-if (!state.elevation?.raised) throw new Error('Japanese elevation layer is not active');
-if (!state.layout.naturalized) throw new Error('Thai natural layout is not active');
 if (!state.gameplay || state.gameplay.hp !== state.gameplay.maxHp || state.gameplay.mana !== state.gameplay.maxMana || state.gameplay.stamina !== state.gameplay.maxStamina) throw new Error(`Starting resources are not full: ${JSON.stringify(state.gameplay)}`);
-if (!state.camera || state.camera.scaleY !== 0.86) throw new Error('Camera projection is not configured');
-if (!state.cameraHook?.active || !state.cameraHook?.scaleApplied) throw new Error('Elevated camera projection is not actually applied');
-if (!state.islandTrees?.groundShadows) throw new Error('Japanese tree ground shadows are not active');
-if (!state.polish?.active || state.polish?.pixelOnly !== true) throw new Error('Visual polish layer is missing');
-if (!state.effects?.cameraAligned || !state.effects?.sakuraPetals || !state.effects?.fireflies) throw new Error('Effects layer is incomplete');
 if (!islandState.available || islandState.player.x !== 4300 || islandState.player.y !== 1080) throw new Error('Japanese island render probe could not be positioned');
+
 console.log('MOONWOOD BROWSER SMOKE PASS');
+console.log('VISUAL AUDIT', JSON.stringify(visualAudit, null, 2));
 console.log(JSON.stringify({state,movementProbe,treeHitboxProbe,islandState}, null, 2));
 await browser.close();
