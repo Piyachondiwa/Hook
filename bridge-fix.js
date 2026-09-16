@@ -17,18 +17,18 @@ const FENCES=[
 const inside=(q,x,y)=>x>=q[0]&&x<=q[0]+q[2]&&y>=q[1]&&y<=q[1]+q[3];
 const inRect=(q,x,y,r=0)=>x>=q[0]-r&&x<=q[0]+q[2]+r&&y>=q[1]-r&&y<=q[1]+q[3]+r;
 blocked=function(x,y){
-  /* The bridge is deliberately wider than the art so the player never catches an edge pixel. */
-  if(inRect([BRIDGE.x1,BRIDGE.y1,BRIDGE.x2-BRIDGE.x1,BRIDGE.y2-BRIDGE.y1],x,y,12))return false;
-  /* The approach/landing is open, but fields still remain solid once the player leaves the bridge. */
+  /* Rice is not a walking surface. The bridge may touch the first field visually, but the field wins once past the landing edge. */
   for(const q of FIELDS){
     if(inside(q,x,y)){
-      if(q[0]===3730&&x<=3795&&y<=1280)continue;
+      if(q[0]===3730&&x<=3795&&y<=1245)continue;
       return true;
     }
   }
   for(const q of FENCES)if(inside(q,x,y))return true;
+  /* The bridge is deliberately wider than the art so the player never catches an edge pixel. */
+  if(inRect([BRIDGE.x1,BRIDGE.y1,BRIDGE.x2-BRIDGE.x1,BRIDGE.y2-BRIDGE.y1],x,y,12))return false;
   if(inside(CORRIDOR,x,y))return false;
   return previousBlocked(x,y);
 };
-window.moonwoodBridgeFix={active:true,authoritative:true,corridor:{...CORRIDOR},bridge:{...BRIDGE},fields:FIELDS.map(q=>({x:q[0],y:q[1],w:q[2],h:q[3]})),fences:FENCES.length,cleanTravelLanes:true};
+window.moonwoodBridgeFix={active:true,authoritative:true,corridor:{...CORRIDOR},bridge:{...BRIDGE},fields:FIELDS.map(q=>({x:q[0],y:q[1],w:q[2],h:q[3]})),fences:FENCES.length,cleanTravelLanes:true,fieldCollisionAuthoritative:true};
 })();
