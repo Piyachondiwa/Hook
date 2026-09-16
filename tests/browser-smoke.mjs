@@ -49,8 +49,8 @@ const state = await page.evaluate(() => {
     islandOutsideSouthBlocked: !check(3700,1765),
     villageRoadOpen: check(4260,1100),
     houseBlocked: check(3950,920),
-    riceBlocked: check(3980,1220),
-    fenceBlocked: check(3990,1185),
+    riceBlocked: check(4050,1280),
+    fenceBlocked: check(3990,1220),
     outsideWestBlocked: !check(3510,1000),
     outsideEastBlocked: !check(5200,1000),
     outsideNorthBlocked: !check(4300,580),
@@ -85,7 +85,7 @@ const treeHitboxProbe = await page.evaluate(() => {
     const ok=blocked(t.x,t.y+43*t.s)===true;
     samples.push({x:t.x,y:t.y,type:t.type,blocked:ok});
   }
-  return {available:positions.length>0,checked:samples.length,allBlocked:samples.length>0&&samples.every(q=>q.blocked)};
+  return {available:positions.length>0,checked:samples.length,allBlocked:samples.length>0&&samples.every(q=>q.blocked),samples};
 });
 
 const islandState = await page.evaluate(() => {
