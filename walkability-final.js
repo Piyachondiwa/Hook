@@ -12,7 +12,7 @@ const insideLand=(x,y)=>x>=LAND.x1&&x<=LAND.x2&&y>=LAND.y1&&y<=LAND.y2;
 const treePositions=window.moonwoodIslandTreePositions||[];
 blocked=function(x,y){
   if(rect([BR.x1,BR.y1,BR.x2-BR.x1,BR.y2-BR.y1],x,y,6))return false;
-  if(x>=3655&&x<=5125&&y>=1000&&y<=1195)return false;
+  if(x>=3655&&x<=5125&&y>=1050&&y<=1195)return false;
   if(insideLand(x,y)){
     for(const q of HOUSES)if(rect(q,x,y,10))return true;
     for(const q of FIELDS)if(rect(q,x,y,0))return true;
