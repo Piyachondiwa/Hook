@@ -20,22 +20,9 @@ function gate(x,y){B(x,y,8,34,C.dark);B(x+34,y,8,34,C.dark);B(x-4,y-3,50,5,C.woo
 function sakura(x,y,s=1){B(x-5*s,y,10*s,40*s,C.wood);B(x-2*s,y,5*s,32*s,C.woodHi);const q=[[0,-36,34,19],[-32,-27,29,18],[32,-25,29,18],[0,-58,25,18],[-18,-50,23,15],[18,-48,23,15]];for(const a of q)B(x+(a[0]-a[2]/2)*s,y+a[1]*s,a[2]*s,a[3]*s,a[0]%2?C.pink:C.pinkHi)}
 function bamboo(x,y,s=1){for(let i=0;i<8;i++){const xx=x+i*7*s;B(xx,y-i*2*s,5*s,37*s,C.bamboo);B(xx+1,y-i*2*s,2*s,29*s,C.grass2);B(xx-1,y+8*s-i*2*s,7*s,3,C.bamboo)}}
 function tree(x,y,s=1,type='broad'){B(x-30*s,y+45*s,60*s,7*s,C.shadow);B(x-5*s,y,10*s,48*s,C.wood);B(x-2*s,y+5*s,4*s,38*s,C.woodHi);const clusters=type==='pine'?[[-30,40,18],[-18,53,24],[-5,67,29],[9,60,25],[22,47,20],[32,34,14]]:[[-32,25,23],[-18,39,31],[-2,47,38],[17,40,30],[32,27,23],[4,61,25]];for(let j=0;j<clusters.length;j++){const [dy,w,h]=clusters[j],cx=x+(j%3-1)*9*s;for(let yy=-h;yy<h;yy+=4)for(let xx=-w;xx<w;xx+=4){const d=xx*xx/(w*w)+yy*yy/(h*h);if(d>1)continue;const v=n(cx+xx,dy+yy);if(v<.18||d>.82&&v<.5)continue;B(cx+xx,y+dy+yy,3*s,3*s,v>.84?C.leaf3:v>.5?C.leaf2:C.leaf)}}}
-function finalIsland(){
-  sea();land();
-  path(3710,1050,1390,48);path(4250,750,44,300);path(3715,995,205,26);path(4750,995,230,26);path(4040,1140,330,30);path(4250,1370,44,205);path(3890,1560,900,30);
-  house(3745,790,1);house(3940,790,.96,C.roofHi);house(4140,790,.98);house(4420,790,1);house(4645,790,.92,C.roofHi);store(3820,925,.95);store(4560,925,.9);
-  torii(4280,765,.95);B(3890,780,6,35,C.wood);B(3882,773,22,9,C.stone);B(3885,776,16,5,C.gold);
-  channel(3715,1198,1260,18);
-  field(3730,1235,190,125);field(3985,1235,205,125);field(4255,1235,210,125);field(4525,1235,250,125);field(4805,1235,185,125);
-  fence(3725,1217,190,140);fence(3980,1217,205,140);fence(4250,1217,210,140);fence(4520,1217,250,140);fence(4800,1217,185,140);
-  gate(3908,1330);gate(4175,1330);gate(4455,1330);gate(4770,1330);
-  sakura(4050,1495,.82);sakura(4710,1500,.88);bamboo(3880,1465,.92);bamboo(4860,1450,.88);bamboo(4690,865,.76);
-  tree(3745,820,.72,'pine');tree(4990,820,.78,'broad');tree(3770,1420,.72,'broad');tree(5010,1420,.72,'pine');tree(3950,1600,.68,'pine');tree(4820,1600,.68,'broad');
-  for(let i=0;i<500;i++){const x=3750+(i*37)%1230,y=720+(i*71)%960;if((y>1030&&y<1150)||(y>1205&&y<1410)||(x>3740&&x<4990&&y>775&&y<1025))continue;const v=n(i,91);if(v<.25)B(x,y,3,2,C.stoneHi);else if(v<.5)B(x,y,4,2,C.grassHi);else if(v<.72){B(x,y,2,7,C.grass);B(x+3,y-3,2,5,C.grass2)}else if(v<.86)B(x,y,4,4,C.pink);else B(x,y,3,3,C.gold)}
-  bridge();
-}
+function finalIsland(){sea();land();path(3710,1050,1390,48);path(4250,750,44,300);path(3715,995,205,26);path(4750,995,230,26);path(4040,1140,330,30);path(4250,1370,44,205);path(3890,1560,900,30);house(3745,790,1);house(3940,790,.96,C.roofHi);house(4140,790,.98);house(4420,790,1);house(4645,790,.92,C.roofHi);store(3820,925,.95);store(4560,925,.9);torii(4280,765,.95);B(3890,780,6,35,C.wood);B(3882,773,22,9,C.stone);B(3885,776,16,5,C.gold);channel(3715,1198,1260,18);field(3730,1235,190,125);field(3985,1235,205,125);field(4255,1235,210,125);field(4525,1235,250,125);field(4805,1235,185,125);fence(3725,1217,190,140);fence(3980,1217,205,140);fence(4250,1217,210,140);fence(4520,1217,250,140);fence(4800,1217,185,140);gate(3908,1330);gate(4175,1330);gate(4455,1330);gate(4770,1330);sakura(4050,1495,.82);sakura(4710,1500,.88);bamboo(3880,1465,.92);bamboo(4860,1450,.88);bamboo(4690,865,.76);tree(3745,820,.72,'pine');tree(4990,820,.78,'broad');tree(3770,1420,.72,'broad');tree(5010,1420,.72,'pine');tree(3950,1600,.68,'pine');tree(4820,1600,.68,'broad');for(let i=0;i<500;i++){const x=3750+(i*37)%1230,y=720+(i*71)%960;if((y>1030&&y<1150)||(y>1205&&y<1410)||(x>3740&&x<4990&&y>775&&y<1025))continue;const v=n(i,91);if(v<.25)B(x,y,3,2,C.stoneHi);else if(v<.5)B(x,y,4,2,C.grassHi);else if(v<.72){B(x,y,2,7,C.grass);B(x+3,y-3,2,5,C.grass2)}else if(v<.86)B(x,y,4,4,C.pink);else B(x,y,3,3,C.gold)}bridge()}
 function channel(x,y,w,h){B(x,y,w,h,C.sea2);B(x,y,w,4,C.foam);for(let i=10;i<w;i+=32){const v=n(x+i,y);B(x+i,y+8+(v*5|0),13,2,C.sea3)}}
 world=function(){previousWorld();if(p.x>=3250)finalIsland()};
-window.moonwoodCamera=()=>{const vh=c.height/.86;return{x:Math.max(0,Math.min(5400-c.width,p.x-c.width/2)),y:Math.max(0,Math.min(2500-vh,p.y-vh*.62)),scaleY:.86}};
+window.moonwoodCamera=()=>{const vh=c.height/.86;return{x:Math.max(0,Math.min(5400-c.width,p.x-c.width/2)),y:Math.max(0,Math.min(2500-vh,p.y-vh*.78)),scaleY:.86}};
 window.moonwoodVisualFinal={active:true,authoritative:true,cleanBridge:true,cleanGround:true,forwardCamera:true,noStackedIslandLayers:true};
 })();
