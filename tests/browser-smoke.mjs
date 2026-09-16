@@ -30,7 +30,8 @@ const state = await page.evaluate(() => {
   const canvas = document.getElementById('game');
   const scene = window.moonwoodScene || {};
   const layout = window.moonwoodLayout || {};
-  const check = (x,y) => { try { return blocked(x,y) === false; } catch { return false; } };
+  const debug = window.moonwoodDebug || {};
+  const check = (x,y) => { try { return debug.blocked ? debug.blocked(x,y) === false : blocked(x,y) === false; } catch { return false; } };
   const gameplay = typeof window.moonwoodState === 'function' ? window.moonwoodState() : null;
   return {
     canvasWidth: canvas?.width,
@@ -38,6 +39,7 @@ const state = await page.evaluate(() => {
     scene,
     layout,
     gameplay,
+    debugAvailable: typeof debug.player === 'function' && typeof debug.move === 'function',
     bridgeApproachOpen: check(3525,1160),
     bridgeOpen: check(3600,1160),
     islandRoadAfterBridgeOpen: check(3890,1160),
@@ -63,13 +65,27 @@ const state = await page.evaluate(() => {
 await page.screenshot({ path: 'test-results/moonwood-main.png', fullPage: false });
 
 const movementProbe = await page.evaluate(() => {
-  if (!window.p || typeof window.move !== 'function') return {available:false};
-  const old={x:window.p.x,y:window.p.y};
-  window.p.x=3420;window.p.y=1160;
+  const debug = window.moonwoodDebug;
+  if (!debug || typeof debug.player !== 'function' || typeof debug.move !== 'function') return {available:false};
+  const old=debug.player();
+  // Start on the west approach and walk right across the bridge into the island.
+  window.moonwoodDebug.playerStart = {x:3420,y:1160};
+  const p0=old;
+  const player = window.moonwoodDebug;
+  // The game-debug player() exposes the real player object state, so reposition through move deltas.
+  // Use direct collision-aware moves after placing p through the debug helper when available.
+  const startX=3420,startY=1160;
+  while(player.player().x!==startX || player.player().y!==startY){
+    // Restore through a zero-length move is harmless; actual placement is handled below by the page test fallback.
+    break;
+  }
   const samples=[];
-  for(let i=0;i<8;i++){window.move(45,0);samples.push({x:window.p.x,y:window.p.y});}
-  const result={available:true,start:old,after:{x:window.p.x,y:window.p.y},samples};
-  window.p.x=old.x;window.p.y=old.y;
+  // Expose a deterministic setter through the debug bridge in newer builds.
+  if (typeof player.setPlayer === 'function') player.setPlayer(startX,startY);
+  else return {available:false,reason:'debug setter missing'};
+  for(let i=0;i<8;i++){player.move(45,0);samples.push(player.player())}
+  const result={available:true,start:p0,after:player.player(),samples};
+  player.setPlayer(p0.x,p0.y);
   return result;
 });
 
@@ -86,13 +102,13 @@ const treeHitboxProbe = await page.evaluate(() => {
 });
 
 const islandState = await page.evaluate(() => {
-  if (!window.p || typeof window.world !== 'function') return { available:false };
-  window.p.x = 4300;
-  window.p.y = 1080;
+  const debug=window.moonwoodDebug;
+  if (!debug || typeof debug.setPlayer !== 'function' || typeof window.world !== 'function') return { available:false };
+  debug.setPlayer(4300,1080);
   window.world();
   return {
     available:true,
-    player:{x:window.p.x,y:window.p.y},
+    player:debug.player(),
     camera:typeof window.moonwoodCamera === 'function' ? window.moonwoodCamera() : null,
     scene:window.moonwoodScene || null
   };
@@ -102,6 +118,7 @@ await page.screenshot({ path: 'test-results/moonwood-japan-island.png', fullPage
 
 if (errors.length) throw new Error(errors.join('\n'));
 if (state.canvasWidth !== 640 || state.canvasHeight !== 360) throw new Error(`Unexpected canvas: ${state.canvasWidth}x${state.canvasHeight}`);
+if (!state.debugAvailable) throw new Error('Gameplay debug bridge is not loaded');
 if (!state.oceanFix?.active) throw new Error('Ocean renderer fix is not loaded');
 if (!state.scene.oceanBackground) throw new Error('Ocean background flag missing');
 if (!state.scene.bridgeWalkable) throw new Error('Bridge walkable flag missing');
