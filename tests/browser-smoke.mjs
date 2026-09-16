@@ -133,7 +133,7 @@ if (!state.gameplay || state.gameplay.hp !== state.gameplay.maxHp || state.gamep
 if (!state.camera || state.camera.scaleY !== 0.86) throw new Error('Camera projection is not configured');
 if (!state.cameraHook?.active || !state.cameraHook?.scaleApplied) throw new Error('Elevated camera projection is not actually applied');
 if (!state.islandTrees?.groundShadows) throw new Error('Japanese tree ground shadows are not active');
-if (!state.polish?.active || state.polish?.pixelOnly || false) throw new Error('Visual polish layer is missing');
+if (!state.polish?.active || state.polish?.pixelOnly !== true) throw new Error('Visual polish layer is missing');
 if (!state.effects?.cameraAligned || !state.effects?.sakuraPetals || !state.effects?.fireflies) throw new Error('Effects layer is incomplete');
 if (!islandState.available || islandState.player.x !== 4300 || islandState.player.y !== 1080) throw new Error('Japanese island render probe could not be positioned');
 console.log('MOONWOOD BROWSER SMOKE PASS');
