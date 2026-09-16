@@ -1,0 +1,2 @@
+/* Moonwood: collision matches the extra starting-area trees. */
+(()=>{'use strict';if(typeof blocked!=='function')return;const prev=blocked,T=[[1460,965,1.05],[2020,975,.9],[2340,995,.82],[1510,1230,.78],[2160,1245,.95],[2860,1260,.82]];blocked=function(x,y){for(const q of T)if(Math.hypot(x-q[0],y-(q[1]+43*q[2]))<18+12*q[2])return true;return prev(x,y)};window.moonwoodStartCollision={active:true,aligned:true};})();
