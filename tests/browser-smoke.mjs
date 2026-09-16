@@ -7,7 +7,7 @@ page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
 page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
 
 await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'networkidle', timeout: 20000 });
-await page.waitForTimeout(1200);
+await page.waitForTimeout(900);
 
 const state = await page.evaluate(() => {
   const canvas = document.getElementById('game');
@@ -31,11 +31,29 @@ const state = await page.evaluate(() => {
     outsideNorthBlocked: !check(4300,580),
     outsideSouthBlocked: !check(4300,1800),
     camera: typeof window.moonwoodCamera === 'function' ? window.moonwoodCamera() : null,
-    boundary: window.moonwoodBoundary || null
+    boundary: window.moonwoodBoundary || null,
+    failsafe: window.moonwoodFailsafe || null,
+    elevation: window.moonwoodElevation || null
   };
 });
 
-await page.screenshot({ path: 'test-results/moonwood-smoke.png', fullPage: false });
+await page.screenshot({ path: 'test-results/moonwood-main.png', fullPage: false });
+
+// Move the real player onto the Japanese island and force a render pass.
+const islandState = await page.evaluate(() => {
+  if (!window.p || typeof window.world !== 'function') return { available:false };
+  window.p.x = 4300;
+  window.p.y = 1080;
+  window.world();
+  return {
+    available:true,
+    player:{x:window.p.x,y:window.p.y},
+    camera:typeof window.moonwoodCamera === 'function' ? window.moonwoodCamera() : null,
+    scene:window.moonwoodScene || null
+  };
+});
+await page.waitForTimeout(100);
+await page.screenshot({ path: 'test-results/moonwood-japan-island.png', fullPage: false });
 await browser.close();
 
 if (errors.length) throw new Error(errors.join('\n'));
@@ -50,7 +68,10 @@ if (state.riceBlocked) throw new Error('Player can walk through a rice field');
 if (state.fenceBlocked) throw new Error('Player can walk through a fence');
 if (!state.outsideWestBlocked || !state.outsideBridgeBlocked || !state.outsideEastBlocked || !state.outsideNorthBlocked || !state.outsideSouthBlocked) throw new Error('Player can leave the island/bridge boundary');
 if (!state.boundary?.locked) throw new Error('Hard island boundary lock is not active');
+if (!state.failsafe?.collisionOnly || state.failsafe?.visualOverride) throw new Error('Failsafe visual override is active');
+if (!state.elevation?.raised) throw new Error('Japanese elevation layer is not active');
 if (!state.layout.naturalized) throw new Error('Thai natural layout is not active');
 if (!state.camera || state.camera.scaleY !== 0.86) throw new Error('Camera projection is not active');
+if (!islandState.available || islandState.player.x !== 4300 || islandState.player.y !== 1080) throw new Error('Japanese island render probe could not be positioned');
 console.log('MOONWOOD BROWSER SMOKE PASS');
-console.log(JSON.stringify(state, null, 2));
+console.log(JSON.stringify({state,islandState}, null, 2));
