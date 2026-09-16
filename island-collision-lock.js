@@ -1,19 +1,12 @@
-/* Moonwood: final hard boundary for expanded Japanese island. */
+/* Moonwood: collision lock aligned to the expanded Japanese island. */
 (()=>{'use strict';
 if(typeof p==='undefined'||typeof world!=='function')return;
 const previousBlocked=typeof blocked==='function'?blocked:null;
-// Collision is expanded by the player's ~15px radius so the player can actually reach the visible bridge edge.
-// The art remains unchanged; this is only the walkable footprint.
-const BR={x1:3490,x2:3930,y1:1045,y2:1290};
-const CORE={x1:3820,x2:4800,y1:760,y2:1510};
+const BR={x1:3340,x2:3835,y1:1050,y2:1285};
+const LAND={x1:3625,x2:5075,y1:635,y2:1750};
 function bridgeOpen(x,y){return x>=BR.x1&&x<=BR.x2&&y>=BR.y1&&y<=BR.y2}
-function landOpen(x,y){
-  if(bridgeOpen(x,y))return true;
-  if(x>=CORE.x1&&x<=CORE.x2&&y>=CORE.y1&&y<=CORE.y2)return true;
-  if(x>=3550&&x<=5080&&y>=705&&y<=759)return true;
-  if(x>=3550&&x<=3675&&y>=790&&y<=1470)return true;
-  if(x>=4740&&x<=5160&&y>=800&&y<=1480)return true;
-  if(x>=3590&&x<=5040&&y>=1600&&y<=1720)return true;
+function islandOpen(x,y){
+  if(x>=LAND.x1&&x<=LAND.x2&&y>=LAND.y1&&y<=LAND.y2)return true;
   return false;
 }
 const old=previousBlocked;
@@ -21,11 +14,11 @@ blocked=function(x,y){
   const r=15;
   if(x<r||y<r||x>5400-r||y>2500-r)return true;
   if(bridgeOpen(x,y))return false;
-  if(x>=3500&&x<=5200&&y>=620&&y<=1780){
-    if(!landOpen(x,y))return true;
+  if(x>=3300&&x<=5150&&y>=600&&y<=1785){
+    if(!islandOpen(x,y))return true;
     return old?old(x,y):false;
   }
   return old?old(x,y):true;
 };
-window.moonwoodBoundary={locked:true,bridge:{...BR},land:{...CORE},expandedBoundary:true,bridgeApproach:true};
+window.moonwoodBoundary={locked:true,bridge:{...BR},land:{...LAND},expandedBoundary:true,bridgeApproach:true};
 })();
