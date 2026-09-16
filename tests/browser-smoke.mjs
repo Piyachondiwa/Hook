@@ -50,9 +50,12 @@ const state = await page.evaluate(() => {
     islandOutsideNorthBlocked: !check(3700,620),
     islandOutsideSouthBlocked: !check(3700,1765),
     villageRoadOpen: check(4260,1100),
+    roadClearAfterBridge: check(3840,1100) && check(4040,1100) && check(4580,1100) && check(5010,1100),
     houseBlocked: check(3950,920),
     riceBlocked: check(4050,1280),
+    allRiceBlocked: [3820,4090,4360,4650,4890].every(x => !check(x,1280)),
     fenceBlocked: check(3990,1220),
+    allTopFencesBlocked: [3730,4000,4270,4550,4820].every(x => !check(x,1220)),
     outsideWestBlocked: !check(3510,1000),
     outsideEastBlocked: !check(5200,1000),
     outsideNorthBlocked: !check(4300,580),
@@ -65,7 +68,8 @@ const state = await page.evaluate(() => {
     oceanFix: window.moonwoodOceanFix || null,
     islandTrees: window.moonwoodIslandTrees || null,
     polish: window.moonwoodPolish || null,
-    effects: window.moonwoodEffects || null
+    effects: window.moonwoodEffects || null,
+    bitMax: window.moonwoodBitMax || null
   };
 });
 
@@ -114,7 +118,8 @@ const visualAudit = {
   characterPolish: !!(state.polish?.active && state.polish?.pixelOnly === true && state.polish?.readablePose === true),
   effects: !!(state.effects?.cameraAligned && state.effects?.sakuraPetals && state.effects?.fireflies),
   naturalThaiLayout: !!state.layout.naturalized,
-  pixelDetail: state.scene.pixelDetail === 'high' && !!state.elevation?.pixelTerrain
+  pixelDetail: state.scene.pixelDetail === 'high' && !!state.elevation?.pixelTerrain,
+  bitMax: !!(state.bitMax?.active && state.bitMax?.level === 'MAX' && state.bitMax?.deterministic)
 };
 
 if (errors.length) throw new Error(errors.join('\n'));
@@ -124,20 +129,22 @@ if (!state.oceanFix?.active) throw new Error('Ocean renderer fix is not loaded')
 if (!state.scene.oceanBackground) throw new Error('Ocean background flag missing');
 if (!state.scene.bridgeWalkable) throw new Error('Bridge walkable flag missing');
 if (!state.scene.naturalJapaneseLayout) throw new Error('Japanese layout flag missing');
+if (!state.scene.cleanWalkLanes) throw new Error('Clean travel-lane layout flag missing');
 if (!state.bridgeFix?.authoritative) throw new Error('Authoritative bridge fix is not loaded');
 if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.bridgeEastLandingOpen || !state.islandRoadAfterBridgeOpen || !state.bridgeNorthBlocked || !state.bridgeSouthBlocked) throw new Error(`Bridge/island corridor is blocked or leaks: ${JSON.stringify({approach:state.bridgeApproachOpen,bridge:state.bridgeOpen,landing:state.bridgeEastLandingOpen,road:state.islandRoadAfterBridgeOpen,north:state.bridgeNorthBlocked,south:state.bridgeSouthBlocked,boundary:state.boundary})}`);
 if (!state.islandOutsideNorthBlocked || !state.islandOutsideSouthBlocked) throw new Error(`Island north/south boundary failed: ${JSON.stringify({north:state.islandOutsideNorthBlocked,south:state.islandOutsideSouthBlocked})}`);
 if (!movementProbe.available || movementProbe.after.x < 3650) throw new Error(`Actual bridge movement probe failed: ${JSON.stringify(movementProbe)}`);
 if (!treeHitboxProbe.available || !treeHitboxProbe.allBlocked) throw new Error(`Tree hitbox probe failed: ${JSON.stringify(treeHitboxProbe)}`);
-if (!state.villageRoadOpen) throw new Error('Village road is blocked');
+if (!state.villageRoadOpen || !state.roadClearAfterBridge) throw new Error('Village travel road contains an unexpected blocker');
 if (state.houseBlocked) throw new Error('Player can walk through a house');
-if (state.riceBlocked) throw new Error('Player can walk through a rice field');
-if (state.fenceBlocked) throw new Error('Player can walk through a fence');
+if (!state.riceBlocked || !state.allRiceBlocked) throw new Error('Player can walk through a rice field');
+if (!state.fenceBlocked || !state.allTopFencesBlocked) throw new Error('Player can walk through a fence');
 if (!state.outsideWestBlocked || !state.outsideEastBlocked || !state.outsideNorthBlocked || !state.outsideSouthBlocked) throw new Error('Player can leave the island boundary');
 if (!state.boundary?.locked) throw new Error('Hard island boundary lock is not active');
 if (!state.failsafe?.collisionOnly || state.failsafe?.visualOverride) throw new Error('Failsafe visual override is active');
 if (!state.gameplay || state.gameplay.hp !== state.gameplay.maxHp || state.gameplay.mana !== state.gameplay.maxMana || state.gameplay.stamina !== state.gameplay.maxStamina) throw new Error(`Starting resources are not full: ${JSON.stringify(state.gameplay)}`);
 if (!islandState.available || islandState.player.x !== 4300 || islandState.player.y !== 1080) throw new Error('Japanese island render probe could not be positioned');
+if (!visualAudit.bitMax) throw new Error('BIT MAX finishing pass is not active');
 
 console.log('MOONWOOD BROWSER SMOKE PASS');
 console.log('VISUAL AUDIT', JSON.stringify(visualAudit, null, 2));
