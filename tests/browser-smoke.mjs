@@ -45,6 +45,8 @@ const state = await page.evaluate(() => {
     bridgeOpen: check(3600,1160),
     bridgeEastLandingOpen: check(3840,1160),
     islandRoadAfterBridgeOpen: check(3890,1160),
+    bridgeNorthBlocked: !check(3600,1020),
+    bridgeSouthBlocked: !check(3600,1320),
     islandOutsideNorthBlocked: !check(3700,620),
     islandOutsideSouthBlocked: !check(3700,1765),
     villageRoadOpen: check(4260,1100),
@@ -56,11 +58,14 @@ const state = await page.evaluate(() => {
     outsideNorthBlocked: !check(4300,580),
     outsideSouthBlocked: !check(4300,1800),
     camera: typeof window.moonwoodCamera === 'function' ? window.moonwoodCamera() : null,
+    cameraHook: window.moonwoodCameraHook || null,
     boundary: window.moonwoodBoundary || null,
     failsafe: window.moonwoodFailsafe || null,
     elevation: window.moonwoodElevation || null,
     oceanFix: window.moonwoodOceanFix || null,
-    islandTrees: window.moonwoodIslandTrees || null
+    islandTrees: window.moonwoodIslandTrees || null,
+    polish: window.moonwoodPolish || null,
+    effects: window.moonwoodEffects || null
   };
 });
 
@@ -111,7 +116,7 @@ if (!state.scene.oceanBackground) throw new Error('Ocean background flag missing
 if (!state.scene.bridgeWalkable) throw new Error('Bridge walkable flag missing');
 if (!state.scene.naturalJapaneseLayout) throw new Error('Japanese layout flag missing');
 if (!state.bridgeFix?.authoritative) throw new Error('Authoritative bridge fix is not loaded');
-if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.bridgeEastLandingOpen || !state.islandRoadAfterBridgeOpen) throw new Error(`Bridge/island corridor is blocked: ${JSON.stringify({approach:state.bridgeApproachOpen,bridge:state.bridgeOpen,landing:state.bridgeEastLandingOpen,road:state.islandRoadAfterBridgeOpen,boundary:state.boundary})}`);
+if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.bridgeEastLandingOpen || !state.islandRoadAfterBridgeOpen || !state.bridgeNorthBlocked || !state.bridgeSouthBlocked) throw new Error(`Bridge/island corridor is blocked or leaks: ${JSON.stringify({approach:state.bridgeApproachOpen,bridge:state.bridgeOpen,landing:state.bridgeEastLandingOpen,road:state.islandRoadAfterBridgeOpen,north:state.bridgeNorthBlocked,south:state.bridgeSouthBlocked,boundary:state.boundary})}`);
 if (!state.islandOutsideNorthBlocked || !state.islandOutsideSouthBlocked) throw new Error(`Island north/south boundary failed: ${JSON.stringify({north:state.islandOutsideNorthBlocked,south:state.islandOutsideSouthBlocked})}`);
 if (!movementProbe.available || movementProbe.after.x < 3650) throw new Error(`Actual bridge movement probe failed: ${JSON.stringify(movementProbe)}`);
 if (!treeHitboxProbe.available || !treeHitboxProbe.allBlocked) throw new Error(`Tree hitbox probe failed: ${JSON.stringify(treeHitboxProbe)}`);
@@ -125,7 +130,11 @@ if (!state.failsafe?.collisionOnly || state.failsafe?.visualOverride) throw new 
 if (!state.elevation?.raised) throw new Error('Japanese elevation layer is not active');
 if (!state.layout.naturalized) throw new Error('Thai natural layout is not active');
 if (!state.gameplay || state.gameplay.hp !== state.gameplay.maxHp || state.gameplay.mana !== state.gameplay.maxMana || state.gameplay.stamina !== state.gameplay.maxStamina) throw new Error(`Starting resources are not full: ${JSON.stringify(state.gameplay)}`);
-if (!state.camera || state.camera.scaleY !== 0.86) throw new Error('Camera projection is not active');
+if (!state.camera || state.camera.scaleY !== 0.86) throw new Error('Camera projection is not configured');
+if (!state.cameraHook?.active || !state.cameraHook?.scaleApplied) throw new Error('Elevated camera projection is not actually applied');
+if (!state.islandTrees?.groundShadows) throw new Error('Japanese tree ground shadows are not active');
+if (!state.polish?.active || state.polish?.pixelOnly || false) throw new Error('Visual polish layer is missing');
+if (!state.effects?.cameraAligned || !state.effects?.sakuraPetals || !state.effects?.fireflies) throw new Error('Effects layer is incomplete');
 if (!islandState.available || islandState.player.x !== 4300 || islandState.player.y !== 1080) throw new Error('Japanese island render probe could not be positioned');
 console.log('MOONWOOD BROWSER SMOKE PASS');
 console.log(JSON.stringify({state,movementProbe,treeHitboxProbe,islandState}, null, 2));
