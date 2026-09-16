@@ -39,9 +39,11 @@ const state = await page.evaluate(() => {
     scene,
     layout,
     gameplay,
-    debugAvailable: typeof debug.player === 'function' && typeof debug.move === 'function',
-    bridgeApproachOpen: check(3525,1160),
+    debugAvailable: typeof debug.player === 'function' && typeof debug.move === 'function' && typeof debug.setPlayer === 'function',
+    bridgeFix: window.moonwoodBridgeFix || null,
+    bridgeApproachOpen: check(3330,1160),
     bridgeOpen: check(3600,1160),
+    bridgeEastLandingOpen: check(3840,1160),
     islandRoadAfterBridgeOpen: check(3890,1160),
     islandOutsideNorthBlocked: !check(3700,620),
     islandOutsideSouthBlocked: !check(3700,1765),
@@ -66,39 +68,24 @@ await page.screenshot({ path: 'test-results/moonwood-main.png', fullPage: false 
 
 const movementProbe = await page.evaluate(() => {
   const debug = window.moonwoodDebug;
-  if (!debug || typeof debug.player !== 'function' || typeof debug.move !== 'function') return {available:false};
+  if (!debug || typeof debug.player !== 'function' || typeof debug.move !== 'function' || typeof debug.setPlayer !== 'function') return {available:false};
   const old=debug.player();
-  // Start on the west approach and walk right across the bridge into the island.
-  window.moonwoodDebug.playerStart = {x:3420,y:1160};
-  const p0=old;
-  const player = window.moonwoodDebug;
-  // The game-debug player() exposes the real player object state, so reposition through move deltas.
-  // Use direct collision-aware moves after placing p through the debug helper when available.
-  const startX=3420,startY=1160;
-  while(player.player().x!==startX || player.player().y!==startY){
-    // Restore through a zero-length move is harmless; actual placement is handled below by the page test fallback.
-    break;
-  }
+  debug.setPlayer(3420,1160);
   const samples=[];
-  // Expose a deterministic setter through the debug bridge in newer builds.
-  if (typeof player.setPlayer === 'function') player.setPlayer(startX,startY);
-  else return {available:false,reason:'debug setter missing'};
-  for(let i=0;i<8;i++){player.move(45,0);samples.push(player.player())}
-  const result={available:true,start:p0,after:player.player(),samples};
-  player.setPlayer(p0.x,p0.y);
+  for(let i=0;i<10;i++){debug.move(45,0);samples.push(debug.player())}
+  const result={available:true,start:old,after:debug.player(),samples};
+  debug.setPlayer(old.x,old.y);
   return result;
 });
 
 const treeHitboxProbe = await page.evaluate(() => {
   const positions=window.moonwoodIslandTreePositions||[];
-  const blockedTreeCount=[];
-  for(const t of positions.slice(0,12)){
-    try {
-      const ok=blocked(t.x,t.y+43*t.s)===true;
-      blockedTreeCount.push({x:t.x,y:t.y,type:t.type,blocked:ok});
-    } catch { blockedTreeCount.push({x:t.x,y:t.y,type:t.type,blocked:false}); }
+  const samples=[];
+  for(const t of positions){
+    const ok=blocked(t.x,t.y+43*t.s)===true;
+    samples.push({x:t.x,y:t.y,type:t.type,blocked:ok});
   }
-  return {available:positions.length>0,checked:blockedTreeCount.length,allBlocked:blockedTreeCount.length>0&&blockedTreeCount.every(q=>q.blocked),samples:blockedTreeCount};
+  return {available:positions.length>0,checked:samples.length,allBlocked:samples.length>0&&samples.every(q=>q.blocked)};
 });
 
 const islandState = await page.evaluate(() => {
@@ -123,7 +110,8 @@ if (!state.oceanFix?.active) throw new Error('Ocean renderer fix is not loaded')
 if (!state.scene.oceanBackground) throw new Error('Ocean background flag missing');
 if (!state.scene.bridgeWalkable) throw new Error('Bridge walkable flag missing');
 if (!state.scene.naturalJapaneseLayout) throw new Error('Japanese layout flag missing');
-if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.islandRoadAfterBridgeOpen) throw new Error(`Bridge/island corridor is blocked: ${JSON.stringify({approach:state.bridgeApproachOpen,bridge:state.bridgeOpen,road:state.islandRoadAfterBridgeOpen,boundary:state.boundary})}`);
+if (!state.bridgeFix?.authoritative) throw new Error('Authoritative bridge fix is not loaded');
+if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.bridgeEastLandingOpen || !state.islandRoadAfterBridgeOpen) throw new Error(`Bridge/island corridor is blocked: ${JSON.stringify({approach:state.bridgeApproachOpen,bridge:state.bridgeOpen,landing:state.bridgeEastLandingOpen,road:state.islandRoadAfterBridgeOpen,boundary:state.boundary})}`);
 if (!state.islandOutsideNorthBlocked || !state.islandOutsideSouthBlocked) throw new Error(`Island north/south boundary failed: ${JSON.stringify({north:state.islandOutsideNorthBlocked,south:state.islandOutsideSouthBlocked})}`);
 if (!movementProbe.available || movementProbe.after.x < 3650) throw new Error(`Actual bridge movement probe failed: ${JSON.stringify(movementProbe)}`);
 if (!treeHitboxProbe.available || !treeHitboxProbe.allBlocked) throw new Error(`Tree hitbox probe failed: ${JSON.stringify(treeHitboxProbe)}`);
