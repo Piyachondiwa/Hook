@@ -2,7 +2,9 @@
 (()=>{'use strict';
 if(typeof p==='undefined'||typeof world!=='function')return;
 const previousBlocked=typeof blocked==='function'?blocked:null;
-const BR={x1:3540,x2:3910,y1:1062,y2:1273};
+// Collision is expanded by the player's ~15px radius so the player can actually reach the visible bridge edge.
+// The art remains unchanged; this is only the walkable footprint.
+const BR={x1:3520,x2:3930,y1:1085,y2:1250};
 const CORE={x1:3820,x2:4800,y1:760,y2:1510};
 function bridgeOpen(x,y){return x>=BR.x1&&x<=BR.x2&&y>=BR.y1&&y<=BR.y2}
 function landOpen(x,y){
