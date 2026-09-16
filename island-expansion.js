@@ -23,65 +23,13 @@ function sakura(x,y,s=1){B(x-5*s,y,10*s,40*s,C.wood);B(x-2*s,y,5*s,32*s,C.woodHi
 function bamboo(x,y,s=1){for(let i=0;i<9;i++){const xx=x+i*7*s;B(xx,y-i*2*s,5*s,37*s+i*2,C.bamboo);B(xx+1,y-i*2*s,2*s,29*s,C.grass2);B(xx-1,y+8*s-i*2*s,7*s,3,C.bamboo)}}
 function dock(x,y,w=90){B(x,y,w,16,C.wood);for(let xx=x+5;xx<x+w;xx+=18)B(xx,y+3,11,10,C.woodHi);for(let xx=x;xx<x+w;xx+=30)B(xx,y+16,7,26,C.dark);B(x+w-4,y+17,4,25,C.wood)}
 function boat(x,y,s=1){B(x,y,72*s,9*s,C.dark);B(x+7*s,y+6*s,58*s,7*s,C.wood);B(x+23*s,y-12*s,3*s,15*s,C.wood);B(x+26*s,y-9*s,22*s,12*s,C.paper);B(x+48*s,y-7*s,3*s,10*s,C.wood)}
-function islandGround(){
- B(island.x1+26,island.y1+28,island.x2-island.x1-52,island.y2-island.y1-56,C.stone);
- B(island.x1+6,island.y1+14,island.x2-island.x1-12,34,C.sandHi);
- B(island.x1+34,island.y1+48,island.x2-island.x1-68,island.y2-island.y1-94,C.grass);
- B(island.x1+14,island.y2-38,island.x2-island.x1-28,31,C.stone);
- B(island.x1+38,island.y2-8,island.x2-island.x1-76,12,C.stoneDark);
- for(let i=0;i<150;i++){const x=island.x1+18+(i*79)%1360,y=island.y1+20+(i*53)%1030,n=rnd(i*5,77);B(x,y,4+(i%5),2+(i%2),n>.72?C.stoneHi:n>.42?C.sandHi:C.grassHi)}
-}
-function drawIsland(){
- islandGround();
- // Main street and branching farm lanes.
- path(3695,1075,1240,70);
- path(4250,735,48,345);
- path(3710,1008,225,32);path(4725,1008,260,32);path(4040,1140,330,34);
- path(4250,1340,48,230);path(3860,1560,930,34);
- // Dense village core with breathing room.
- house(3735,860,1.00);
- house(3935,860,.96,C.roofHi);
- house(4140,860,.98);
- house(4420,860,1.00);
- house(4640,860,.92,C.roofHi);
- storehouse(3820,975,.95);storehouse(4560,975,.9);
- torii(4280,715,.95);
- well(3885,1165);well(4780,1165);
- // Agricultural belt, water channels and gates.
- waterChannel(3715,1215,220,150);waterChannel(3970,1215,240,150);waterChannel(4240,1215,245,150);waterChannel(4510,1215,275,150);
- field(3730,1225,190,126);field(3990,1225,205,126);field(4260,1225,210,126);field(4530,1225,245,126);field(4810,1225,170,126);
- fence(3725,1217,200,140);fence(3985,1217,215,140);fence(4255,1217,220,140);fence(4525,1217,255,140);fence(4805,1217,180,140);
- gate(3912,1325);gate(4180,1325);gate(4460,1325);gate(4775,1325);
- // Pond and shrine garden.
- waterChannel(4680,690,245,120);torii(4290,705,.65);
- B(4188,790,200,150,C.grass2);B(4200,802,176,126,C.grass);for(let i=0;i<34;i++){const x=4200+(i*31)%165,y=805+(i*47)%112;B(x,y,3,3,i%3?C.stoneHi:C.pink)}
- // Sakura, bamboo, lanterns, boats and docks.
- sakura(3840,1070,1.0);sakura(4110,1060,.95);sakura(4475,1055,1.0);sakura(4870,1055,.95);sakura(4050,1500,.85);sakura(4710,1510,.9);
- bamboo(3880,1465,.95);bamboo(4860,1450,.9);bamboo(4690,870,.78);
- lantern(3830,1065);lantern(4040,1065);lantern(4460,1065);lantern(4870,1065);lantern(4290,960);lantern(4290,1280);
- dock(4860,820,120);dock(4900,1505,95);boat(4960,835,.85);boat(4950,1525,.72);
- // More edge life: rocks, grass clumps, stepping stones, shrubs and tiny pixel accents.
- for(let i=0;i<360;i++){const x=3670+(i*47)%1360,y=670+(i*83)%1030,n=rnd(i*11,31);if((y>1060&&y<1155)||(y>1200&&y<1390)||(x>3720&&x<5000&&y>850&&y<1030))continue;if(n<.25)B(x,y,4,3,C.stoneHi);else if(n<.48)B(x,y,5,3,C.sandHi);else if(n<.69){B(x,y,3,7,C.grassHi);B(x+3,y-3,2,5,C.grass2)}else if(n<.84)B(x,y,4,4,C.pink);else if(n<.94)B(x,y,3,3,C.gold);else B(x,y,2,6,C.bamboo)}
- // Shoreline reeds and rocks.
- for(let i=0;i<90;i++){const x=island.x1+25+(i*31)%1360;B(x,island.y2-35+(i%5)*3,3,10,C.grass2);B(x+5,island.y2-30+(i%4)*2,2,7,C.grassHi)}
-}
+function islandGround(){B(island.x1+26,island.y1+28,island.x2-island.x1-52,island.y2-island.y1-56,C.stone);B(island.x1+6,island.y1+14,island.x2-island.x1-12,34,C.sandHi);B(island.x1+34,island.y1+48,island.x2-island.x1-68,island.y2-island.y1-94,C.grass);B(island.x1+14,island.y2-38,island.x2-island.x1-28,31,C.stone);B(island.x1+38,island.y2-8,island.x2-island.x1-76,12,C.stoneDark);for(let i=0;i<150;i++){const x=island.x1+18+(i*79)%1360,y=island.y1+20+(i*53)%1030,n=rnd(i*5,77);B(x,y,4+(i%5),2+(i%2),n>.72?C.stoneHi:n>.42?C.sandHi:C.grassHi)}}
+function drawIsland(){islandGround();path(3695,1075,1240,70);path(4250,735,48,345);path(3710,1008,225,32);path(4725,1008,260,32);path(4040,1140,330,34);path(4250,1340,48,230);path(3860,1560,930,34);house(3735,860,1.00);house(3935,860,.96,C.roofHi);house(4140,860,.98);house(4420,860,1.00);house(4640,860,.92,C.roofHi);storehouse(3820,975,.95);storehouse(4560,975,.9);torii(4280,715,.95);well(3890,770);well(4780,1165);waterChannel(3715,1215,220,150);waterChannel(3970,1215,240,150);waterChannel(4240,1215,245,150);waterChannel(4510,1215,275,150);field(3730,1225,190,126);field(3990,1225,205,126);field(4260,1225,210,126);field(4530,1225,245,126);field(4810,1225,170,126);fence(3725,1217,200,140);fence(3985,1217,215,140);fence(4255,1217,220,140);fence(4525,1217,255,140);fence(4805,1217,180,140);gate(3912,1325);gate(4180,1325);gate(4460,1325);gate(4775,1325);waterChannel(4680,690,245,120);torii(4290,705,.65);B(4188,790,200,150,C.grass2);B(4200,802,176,126,C.grass);for(let i=0;i<34;i++){const x=4200+(i*31)%165,y=805+(i*47)%112;B(x,y,3,3,i%3?C.stoneHi:C.pink)}sakura(3840,1070,1.0);sakura(4110,1060,.95);sakura(4475,1055,1.0);sakura(4870,1055,.95);sakura(4050,1500,.85);sakura(4710,1510,.9);bamboo(3880,1465,.95);bamboo(4860,1450,.9);bamboo(4690,870,.78);lantern(3830,1065);lantern(4040,1065);lantern(4460,1065);lantern(4870,1065);lantern(4290,960);lantern(4290,1280);dock(4860,820,120);dock(4900,1505,95);boat(4960,835,.85);boat(4950,1525,.72);for(let i=0;i<360;i++){const x=3670+(i*47)%1360,y=670+(i*83)%1030,n=rnd(i*11,31);if((y>1060&&y<1155)||(y>1200&&y<1390)||(x>3720&&x<5000&&y>850&&y<1030))continue;if(n<.25)B(x,y,4,3,C.stoneHi);else if(n<.48)B(x,y,5,3,C.sandHi);else if(n<.69){B(x,y,3,7,C.grassHi);B(x+3,y-3,2,5,C.grass2)}else if(n<.84)B(x,y,4,4,C.pink);else if(n<.94)B(x,y,3,3,C.gold);else B(x,y,2,6,C.bamboo)}for(let i=0;i<90;i++){const x=island.x1+25+(i*31)%1360;B(x,island.y2-35+(i%5)*3,3,10,C.grass2);B(x+5,island.y2-30+(i%4)*2,2,7,C.grassHi)}}
 function camera(){const vh=c.height/VIEW_Y;return{x:Math.max(0,Math.min(SCENE_W-c.width,p.x-c.width/2)),y:Math.max(0,Math.min(SCENE_H-vh,p.y-vh/2)),scaleY:VIEW_Y}}
-const solids=[
- [3730,845,165,105,'house'],[3930,845,160,105,'house'],[4135,845,160,105,'house'],[4415,845,165,105,'house'],[4635,845,160,105,'house'],
- [3816,962,126,78,'storehouse'],[4556,962,126,78,'storehouse'],[4230,690,102,110,'torii'],[3850,1138,70,50,'well'],[4745,1138,70,50,'well'],
- [3725,1217,200,6,'fence'],[3725,1351,200,6,'fence'],[3725,1217,6,140,'fence'],[3919,1217,6,105,'fence'],
- [3985,1217,215,6,'fence'],[3985,1351,215,6,'fence'],[3985,1217,6,140,'fence'],[4194,1217,6,105,'fence'],
- [4255,1217,220,6,'fence'],[4255,1351,220,6,'fence'],[4255,1217,6,140,'fence'],[4469,1217,6,105,'fence'],
- [4525,1217,255,6,'fence'],[4525,1351,255,6,'fence'],[4525,1217,6,140,'fence'],[4774,1217,6,105,'fence'],
- [4805,1217,180,6,'fence'],[4805,1351,180,6,'fence'],[4805,1217,6,140,'fence'],[4979,1217,6,105,'fence'],
- [3830,1035,30,62,'sakura'],[4100,1025,30,60,'sakura'],[4460,1020,30,62,'sakura'],[4855,1022,30,60,'sakura'],
- [4030,1470,38,48,'sakura'],[4690,1480,38,48,'sakura'],[3850,1455,75,55,'bamboo'],[4830,1440,75,55,'bamboo'],[4660,855,58,45,'bamboo']
-];
-function circleRect(cx,cy,r,q){const nx=Math.max(q[0],Math.min(cx,q[0]+q[2])),ny=Math.max(q[1],Math.min(cy,q[1]+q[3]));return (cx-nx)**2+(cy-ny)**2<r*r}
+const solids=[[3730,845,165,105,'house'],[3930,845,160,105,'house'],[4135,845,160,105,'house'],[4415,845,165,105,'house'],[4635,845,160,105,'house'],[3816,962,126,78,'storehouse'],[4556,962,126,78,'storehouse'],[4230,690,102,110,'torii'],[3855,743,70,50,'well'],[4745,1138,70,50,'well'],[3725,1217,200,6,'fence'],[3725,1351,200,6,'fence'],[3725,1217,6,140,'fence'],[3919,1217,6,105,'fence'],[3985,1217,215,6,'fence'],[3985,1351,215,6,'fence'],[3985,1217,6,140,'fence'],[4194,1217,6,105,'fence'],[4255,1217,220,6,'fence'],[4255,1351,220,6,'fence'],[4255,1217,6,140,'fence'],[4469,1217,6,105,'fence'],[4525,1217,255,6,'fence'],[4525,1351,255,6,'fence'],[4525,1217,6,140,'fence'],[4774,1217,6,105,'fence'],[4805,1217,180,6,'fence'],[4805,1351,180,6,'fence'],[4805,1217,6,140,'fence'],[4979,1217,6,105,'fence'],[3830,1035,30,62,'sakura'],[4100,1025,30,60,'sakura'],[4460,1020,30,62,'sakura'],[4855,1022,30,60,'sakura'],[4030,1470,38,48,'sakura'],[4690,1480,38,48,'sakura'],[3850,1455,75,55,'bamboo'],[4830,1440,75,55,'bamboo'],[4660,855,58,45,'bamboo']];
+function circleRect(cx,cy,r,q){const nx=Math.max(q[0],Math.min(cx,q[0]+q[2])),ny=Math.max(q[1],Math.min(cy,q[1]+q[3]));return(cx-nx)**2+(cy-ny)**2<r*r}
 function onBridge(x,y){return x>=bridge.x1-12&&x<=bridge.x2+12&&y>=bridge.y1-36&&y<=bridge.y2+36}
 world=function(){drawOcean();baseWorld();bridgeArt();drawIsland();if(p.x>3250&&typeof hero==='function')hero();if(p.x>3250&&typeof arrow==='function')arrow()};
 if(baseBlocked)blocked=function(x,y){const r=15;if(x<r||y<r||x>SCENE_W-r||y>SCENE_H-r)return true;if(onBridge(x,y))return false;if(x<island.x1+r)return baseBlocked(x,y);if(x>island.x2-r||y<island.y1+r||y>island.y2-r)return true;for(const q of solids)if(circleRect(x,y,r,q))return true;return false};
-window.moonwoodCamera=camera;
-window.moonwoodScene={oceanBackground:true,bridgeWalkable:true,naturalJapaneseLayout:true,expandedIsland:true,islandBounds:{...island},bridgeBounds:{...bridge},pixelDetail:'high',decorations:360,treesAdded:6,farmland:true,shrineGarden:true,docks:true};
-window.moonwoodIsland={expanded:true,bounds:{...island},bridge:{...bridge},detailLevel:'high'};
+window.moonwoodCamera=camera;window.moonwoodScene={oceanBackground:true,bridgeWalkable:true,naturalJapaneseLayout:true,expandedIsland:true,islandBounds:{...island},bridgeBounds:{...bridge},pixelDetail:'high',decorations:360,treesAdded:6,farmland:true,shrineGarden:true,docks:true};window.moonwoodIsland={expanded:true,bounds:{...island},bridge:{...bridge},detailLevel:'high'};
 })();
