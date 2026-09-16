@@ -1,0 +1,2 @@
+/* Moonwood: bridge detail pass kept separate from collision. */
+(()=>{'use strict';if(typeof world!=='function'||typeof R!=='function')return;const prev=world;world=function(){prev();const x1=3285,y1=1035,w=435;for(let x=x1+6;x<x1+w-10;x+=25){R(x,y1+8,17,100,'#8d5e3d');R(x+3,y1+12,10,4,'#c18a57');R(x+6,y1+23,4,72,'#70462f')}for(let x=x1+8;x<x1+w-10;x+=68){R(x,y1-22,7,116,'#302825');R(x-5,y1-26,17,6,'#a36c45');R(x+7,y1-12,50,5,'#6f4935');R(x+7,y1+92,50,5,'#6f4935')}};window.moonwoodBridgeArt={active:true,detailPass:true,pixelRailings:true};})();
