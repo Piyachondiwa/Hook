@@ -1,0 +1,2 @@
+/* Moonwood: collision rim matches the visible fence top edge. */
+(()=>{'use strict';if(typeof blocked!=='function')return;const prev=blocked,F=[[3725,1217,190,5],[3980,1217,205,5],[4250,1217,210,5],[4520,1217,250,5],[4800,1217,185,5]];blocked=function(x,y){for(const q of F)if(x>=q[0]-3&&x<=q[0]+q[2]+3&&y>=q[1]-3&&y<=q[1]+q[3]+3)return true;return prev(x,y)};window.moonwoodFenceCollision={active:true,aligned:true,topY:1217};})();
