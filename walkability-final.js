@@ -1,11 +1,11 @@
-/* Moonwood: single walkability authority. Open travel space first, block only real solids and world edges. */
+/* Moonwood: final walkability authority. Keep travel lanes open; block only real solids + true island perimeter. */
 (()=>{'use strict';
 if(typeof blocked!=='function'||typeof p==='undefined')return;
 const previous=blocked;
 const BR={x1:3285,x2:3720,y1:1035,y2:1165};
 const LAND={x1:3670,x2:5110,y1:630,y2:1770};
-const APPROACH={x1:2850,x2:3735,y1:1040,y2:1160};
-const ROAD={x1:3655,x2:5095,y1:1018,y2:1192};
+const APPROACH={x1:2850,x2:3735,y1:1005,y2:1195};
+const ROAD={x1:3655,x2:5095,y1:1008,y2:1202};
 const FIELDS=[[3730,1235,190,125],[3985,1235,205,125],[4255,1235,210,125],[4525,1235,250,125],[4805,1235,185,125]];
 const HOUSES=[[3730,845,170,105],[3925,845,175,105],[4130,845,175,105],[4410,845,175,105],[4635,845,175,105],[3810,962,130,82],[4550,962,130,82],[4225,690,112,110]];
 const FENCES=[[3725,1217,190,5],[3980,1217,205,5],[4250,1217,210,5],[4520,1217,250,5],[4800,1217,185,5],[3725,1351,190,5],[3980,1351,205,5],[4250,1351,210,5],[4520,1351,250,5],[4800,1351,185,5]];
@@ -14,6 +14,7 @@ const insideLand=(x,y)=>x>=LAND.x1&&x<=LAND.x2&&y>=LAND.y1&&y<=LAND.y2;
 const treePositions=window.moonwoodIslandTreePositions||[];
 blocked=function(x,y){
   const r=10;
+  /* Explicit travel lanes always win, including the bridge approach. */
   if(rect([APPROACH.x1,APPROACH.y1,APPROACH.x2-APPROACH.x1,APPROACH.y2-APPROACH.y1],x,y,r))return false;
   if(rect([ROAD.x1,ROAD.y1,ROAD.x2-ROAD.x1,ROAD.y2-ROAD.y1],x,y,r))return false;
   if(insideLand(x,y)){
@@ -24,6 +25,7 @@ blocked=function(x,y){
     return false;
   }
   if(rect([BR.x1,BR.y1,BR.x2-BR.x1,BR.y2-BR.y1],x,y,r))return false;
+  /* True island perimeter only. This range surrounds the visible island and bridge, not the whole old-world map. */
   if(x>=3250&&x<=5200&&y>=570&&y<=1830)return true;
   return previous(x,y);
 };
