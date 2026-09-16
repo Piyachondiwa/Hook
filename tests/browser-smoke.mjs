@@ -15,6 +15,12 @@ const menuState = await page.evaluate(() => ({
   about: !!document.getElementById('menuAboutBtn')
 }));
 if (!menuState.open || !menuState.start || !menuState.about) throw new Error(`Main menu is incomplete: ${JSON.stringify(menuState)}`);
+await page.click('#menuAboutBtn');
+const aboutOpen = await page.evaluate(() => document.getElementById('menuAbout')?.classList.contains('open'));
+if (!aboutOpen) throw new Error('About panel did not open');
+await page.click('#menuClose');
+const aboutClosed = await page.evaluate(() => !document.getElementById('menuAbout')?.classList.contains('open'));
+if (!aboutClosed) throw new Error('About panel did not close');
 await page.click('#menuStart');
 await page.waitForTimeout(850);
 const menuClosed = await page.evaluate(() => !document.getElementById('mainMenu'));
@@ -25,16 +31,18 @@ const state = await page.evaluate(() => {
   const scene = window.moonwoodScene || {};
   const layout = window.moonwoodLayout || {};
   const check = (x,y) => { try { return blocked(x,y) === false; } catch { return false; } };
+  const gameplay = typeof window.moonwoodState === 'function' ? window.moonwoodState() : null;
   return {
     canvasWidth: canvas?.width,
     canvasHeight: canvas?.height,
     scene,
     layout,
+    gameplay,
     bridgeApproachOpen: check(3525,1160),
     bridgeOpen: check(3600,1160),
     islandRoadAfterBridgeOpen: check(3890,1160),
-    bridgeOutsideNorthBlocked: !check(3700,1035),
-    bridgeOutsideSouthBlocked: !check(3700,1300),
+    islandOutsideNorthBlocked: !check(3700,620),
+    islandOutsideSouthBlocked: !check(3700,1765),
     villageRoadOpen: check(4260,1100),
     houseBlocked: check(3950,920),
     riceBlocked: check(3980,1220),
@@ -67,15 +75,13 @@ const movementProbe = await page.evaluate(() => {
 
 const treeHitboxProbe = await page.evaluate(() => {
   const positions=window.moonwoodIslandTreePositions||[];
-  const original={x:window.p?.x,y:window.p?.y};
   const blockedTreeCount=[];
-  for(const t of positions.slice(0,8)){
+  for(const t of positions.slice(0,12)){
     try {
       const ok=blocked(t.x,t.y+43*t.s)===true;
       blockedTreeCount.push({x:t.x,y:t.y,type:t.type,blocked:ok});
     } catch { blockedTreeCount.push({x:t.x,y:t.y,type:t.type,blocked:false}); }
   }
-  if(window.p){window.p.x=original.x;window.p.y=original.y;}
   return {available:positions.length>0,checked:blockedTreeCount.length,allBlocked:blockedTreeCount.length>0&&blockedTreeCount.every(q=>q.blocked),samples:blockedTreeCount};
 });
 
@@ -101,7 +107,7 @@ if (!state.scene.oceanBackground) throw new Error('Ocean background flag missing
 if (!state.scene.bridgeWalkable) throw new Error('Bridge walkable flag missing');
 if (!state.scene.naturalJapaneseLayout) throw new Error('Japanese layout flag missing');
 if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.islandRoadAfterBridgeOpen) throw new Error(`Bridge/island corridor is blocked: ${JSON.stringify({approach:state.bridgeApproachOpen,bridge:state.bridgeOpen,road:state.islandRoadAfterBridgeOpen,boundary:state.boundary})}`);
-if (!state.bridgeOutsideNorthBlocked || !state.bridgeOutsideSouthBlocked) throw new Error(`Bridge vertical boundary failed: ${JSON.stringify({north:state.bridgeOutsideNorthBlocked,south:state.bridgeOutsideSouthBlocked})}`);
+if (!state.islandOutsideNorthBlocked || !state.islandOutsideSouthBlocked) throw new Error(`Island north/south boundary failed: ${JSON.stringify({north:state.islandOutsideNorthBlocked,south:state.islandOutsideSouthBlocked})}`);
 if (!movementProbe.available || movementProbe.after.x < 3650) throw new Error(`Actual bridge movement probe failed: ${JSON.stringify(movementProbe)}`);
 if (!treeHitboxProbe.available || !treeHitboxProbe.allBlocked) throw new Error(`Tree hitbox probe failed: ${JSON.stringify(treeHitboxProbe)}`);
 if (!state.villageRoadOpen) throw new Error('Village road is blocked');
@@ -113,6 +119,7 @@ if (!state.boundary?.locked) throw new Error('Hard island boundary lock is not a
 if (!state.failsafe?.collisionOnly || state.failsafe?.visualOverride) throw new Error('Failsafe visual override is active');
 if (!state.elevation?.raised) throw new Error('Japanese elevation layer is not active');
 if (!state.layout.naturalized) throw new Error('Thai natural layout is not active');
+if (!state.gameplay || state.gameplay.hp !== state.gameplay.maxHp || state.gameplay.mana !== state.gameplay.maxMana || state.gameplay.stamina !== state.gameplay.maxStamina) throw new Error(`Starting resources are not full: ${JSON.stringify(state.gameplay)}`);
 if (!state.camera || state.camera.scaleY !== 0.86) throw new Error('Camera projection is not active');
 if (!islandState.available || islandState.player.x !== 4300 || islandState.player.y !== 1080) throw new Error('Japanese island render probe could not be positioned');
 console.log('MOONWOOD BROWSER SMOKE PASS');
