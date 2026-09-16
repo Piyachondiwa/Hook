@@ -19,8 +19,11 @@ const state = await page.evaluate(() => {
     canvasHeight: canvas?.height,
     scene,
     layout,
+    bridgeApproachOpen: check(3525,1160),
     bridgeOpen: check(3600,1160),
     bridgeEdgeOpen: check(3890,1160),
+    bridgeOutsideNorthBlocked: !check(3700,1070),
+    bridgeOutsideSouthBlocked: !check(3700,1265),
     villageRoadOpen: check(4260,1100),
     houseBlocked: check(3950,920),
     riceBlocked: check(3980,1220),
@@ -61,7 +64,8 @@ if (state.canvasWidth !== 640 || state.canvasHeight !== 360) throw new Error(`Un
 if (!state.scene.oceanBackground) throw new Error('Ocean background flag missing');
 if (!state.scene.bridgeWalkable) throw new Error('Bridge walkable flag missing');
 if (!state.scene.naturalJapaneseLayout) throw new Error('Japanese layout flag missing');
-if (!state.bridgeOpen || !state.bridgeEdgeOpen) throw new Error('Bridge collision is blocked');
+if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.bridgeEdgeOpen) throw new Error('Bridge entry/collision is blocked');
+if (!state.bridgeOutsideNorthBlocked || !state.bridgeOutsideSouthBlocked) throw new Error('Player can leave the bridge footprint vertically');
 if (!state.villageRoadOpen) throw new Error('Village road is blocked');
 if (state.houseBlocked) throw new Error('Player can walk through a house');
 if (state.riceBlocked) throw new Error('Player can walk through a rice field');
