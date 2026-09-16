@@ -20,4 +20,5 @@ world=function(){baseWorld();if(p.x>3500)drawTrees()};
 const oldBlocked=typeof blocked==='function'?blocked:null;
 blocked=function(x,y){if(oldBlocked&&oldBlocked(x,y))return true;if(x>3650&&x<5050&&y>650&&y<1735){for(const t of trees){const trunkR=12*t.s;if(Math.hypot(x-t.x,y-(t.y+43*t.s))<15+trunkR)return true}}return false};
 window.moonwoodIslandTrees={count:trees.length,detail:'very-high',microPixels:520};
+window.moonwoodIslandTreePositions=trees.map(t=>({x:t.x,y:t.y,type:t.t,s:t.s}));
 })();
