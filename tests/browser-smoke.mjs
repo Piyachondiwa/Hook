@@ -42,6 +42,16 @@ const state = await page.evaluate(() => {
 
 await page.screenshot({ path: 'test-results/moonwood-main.png', fullPage: false });
 
+const movementProbe = await page.evaluate(() => {
+  if (!window.p || typeof window.move !== 'function') return {available:false};
+  const old={x:window.p.x,y:window.p.y};
+  window.p.x=3500;window.p.y=1160;
+  window.move(50,0);
+  const result={available:true,start:old,after:{x:window.p.x,y:window.p.y}};
+  window.p.x=old.x;window.p.y=old.y;
+  return result;
+});
+
 // Move the real player onto the Japanese island and force a render pass.
 const islandState = await page.evaluate(() => {
   if (!window.p || typeof window.world !== 'function') return { available:false };
@@ -64,8 +74,9 @@ if (state.canvasWidth !== 640 || state.canvasHeight !== 360) throw new Error(`Un
 if (!state.scene.oceanBackground) throw new Error('Ocean background flag missing');
 if (!state.scene.bridgeWalkable) throw new Error('Bridge walkable flag missing');
 if (!state.scene.naturalJapaneseLayout) throw new Error('Japanese layout flag missing');
-if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.bridgeEdgeOpen) throw new Error('Bridge entry/collision is blocked');
-if (!state.bridgeOutsideNorthBlocked || !state.bridgeOutsideSouthBlocked) throw new Error('Player can leave the bridge footprint vertically');
+if (!state.bridgeApproachOpen || !state.bridgeOpen || !state.bridgeEdgeOpen) throw new Error(`Bridge entry/collision is blocked: ${JSON.stringify({approach:state.bridgeApproachOpen,open:state.bridgeOpen,edge:state.bridgeEdgeOpen,boundary:state.boundary})}`);
+if (!state.bridgeOutsideNorthBlocked || !state.bridgeOutsideSouthBlocked) throw new Error(`Bridge vertical boundary failed: ${JSON.stringify({north:state.bridgeOutsideNorthBlocked,south:state.bridgeOutsideSouthBlocked,boundary:state.boundary})}`);
+if (!movementProbe.available || movementProbe.after.x < 3520) throw new Error(`Actual bridge movement probe failed: ${JSON.stringify(movementProbe)}`);
 if (!state.villageRoadOpen) throw new Error('Village road is blocked');
 if (state.houseBlocked) throw new Error('Player can walk through a house');
 if (state.riceBlocked) throw new Error('Player can walk through a rice field');
@@ -78,4 +89,4 @@ if (!state.layout.naturalized) throw new Error('Thai natural layout is not activ
 if (!state.camera || state.camera.scaleY !== 0.86) throw new Error('Camera projection is not active');
 if (!islandState.available || islandState.player.x !== 4300 || islandState.player.y !== 1080) throw new Error('Japanese island render probe could not be positioned');
 console.log('MOONWOOD BROWSER SMOKE PASS');
-console.log(JSON.stringify({state,islandState}, null, 2));
+console.log(JSON.stringify({state,movementProbe,islandState}, null, 2));
